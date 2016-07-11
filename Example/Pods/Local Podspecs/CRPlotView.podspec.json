@@ -1,0 +1,22 @@
+{
+  "name": "CRPlotView",
+  "version": "0.1.0",
+  "summary": "A short description of CRPlotView.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/<GITHUB_USERNAME>/CRPlotView",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "Dmitry Pashinskiy": "pashinskiy.kh.cr@gmail.com"
+  },
+  "source": {
+    "git": "https://github.com/<GITHUB_USERNAME>/CRPlotView.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "8.0"
+  },
+  "source_files": "CRPlotView/Classes/**/*"
+}

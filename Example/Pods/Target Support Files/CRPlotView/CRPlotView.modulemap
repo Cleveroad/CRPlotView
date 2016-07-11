@@ -1,0 +1,6 @@
+framework module CRPlotView {
+  umbrella header "CRPlotView-umbrella.h"
+
+  export *
+  module * { export * }
+}

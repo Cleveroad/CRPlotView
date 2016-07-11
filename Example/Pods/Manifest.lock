@@ -1,0 +1,14 @@
+PODS:
+  - CRPlotView (0.1.0)
+
+DEPENDENCIES:
+  - CRPlotView (from `../`)
+
+EXTERNAL SOURCES:
+  CRPlotView:
+    :path: ../
+
+SPEC CHECKSUMS:
+  CRPlotView: 17bdc346a13b1306a02300d59ffed5752549e1cf
+
+COCOAPODS: 0.39.0
