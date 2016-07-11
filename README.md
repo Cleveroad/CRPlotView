@@ -27,21 +27,21 @@ import CRPlotView
 
 ## Usage
 
-    * CRPlotView uses a relative coordinate system. You can specify the maximum point on the axis Y and X by setup the `totalRelativeHeight` 
-        and `totalRelativeLength`. 
+* CRPlotView uses a relative coordinate system. You can specify the maximum point on the axis Y and X by setup the `totalRelativeHeight` 
+    and `totalRelativeLength`. 
 
-    * You can adjust the zoom in the limit using `maxZoomScale`, you can also specify the visible region be setting `visibleLength` (using relative coordinate system)
-    * Use `startRelativeX` to adjust begin of the plot canvas.
+* You can adjust the zoom in the limit using `maxZoomScale`, you can also specify the visible region be setting `visibleLength` (using relative coordinate system)
+* Use `startRelativeX` to adjust begin of the plot canvas.
 
-    * If you want to have smooth curve lines, set `approximateMode` to true, and you can adjust precision by `approximateAccuracy`
+* If you want to have smooth curve lines, set `approximateMode` to true, and you can adjust precision by `approximateAccuracy`
 
-    * Background color will apply by interpolating between `highColor` and `lowColor` colors, dependce on *markRelativePos*
+* Background color will apply by interpolating between `highColor` and `lowColor` colors, dependce on *markRelativePos*
 
-    * Set `markRelativePos`(using relative coordinate system) by X axis to manage plot progress
+* Set `markRelativePos`(using relative coordinate system) by X axis to manage plot progress
 
-    * Set `points` to configure plot
+* Set `points` to configure plot
 
-    * Set `isVerticalAxisInversed` to inverse point on Y axis
+* Set `isVerticalAxisInversed` to inverse point on Y axis
 
 ## Author
 
