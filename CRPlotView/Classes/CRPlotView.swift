@@ -15,27 +15,27 @@ let lightBlackColor = UIColor(colorLiteralRed: 100/255, green: 100/255, blue: 10
 
 let isItDebug = false
 
-public class CRPlotView: UIView {
+open class CRPlotView: UIView {
     /// allows to make curve bezier between points to make smooth lines
-    public var approximateMode = false
+    open var approximateMode = false
     
     /// points count of points that will be created between two relative points
-    public var approximateAccuracy = 30
+    open var approximateAccuracy = 30
 
     /// total relative length for plot scene
-    public var totalRelativeLength:CGFloat = 1
+    open var totalRelativeLength:CGFloat = 1
     
     /// start relative offset by x axes
-    public var startRelativeX:CGFloat  = 0
+    open var startRelativeX:CGFloat  = 0
     
     /// total relative height for plot scene
-    public var totalRelativeHeight: CGFloat = 1
+    open var totalRelativeHeight: CGFloat = 1
     
     //TODO: add doc and usage for the vertical axis
-    public var isVerticalAxisInversed = false
+    open var isVerticalAxisInversed = false
     
     /// visible relative length that will be showed in view
-    public var visibleLength:CGFloat = 1 {
+    open var visibleLength:CGFloat = 1 {
         didSet {
             print( visibleLength )
             if visibleLength > totalRelativeLength {
@@ -43,7 +43,7 @@ public class CRPlotView: UIView {
             }
             
             if let maxZoom = maxZoomScale
-            where visibleLength < totalRelativeLength / maxZoom {
+            , visibleLength < totalRelativeLength / maxZoom {
                 visibleLength = totalRelativeLength / maxZoom
             }
             
@@ -52,22 +52,22 @@ public class CRPlotView: UIView {
     }
     
     /// will hide mark
-    public var markHidden: Bool {
+    open var markHidden: Bool {
         set {
-            markLayer.hidden = newValue
+            markLayer.isHidden = newValue
         }
         get {
-            return markLayer.hidden
+            return markLayer.isHidden
         }
     }
     
     /// background color will apply by interpolating between high and low colors, depend on *markRelativePosition*
-    public var highColor: UIColor?
-    public var lowColor: UIColor?
+    open var highColor: UIColor?
+    open var lowColor: UIColor?
     
     
-    public var maxZoomScale: CGFloat?
-    public var edgeInsets = UIEdgeInsetsMake(22, 0, 0, 0)
+    open var maxZoomScale: CGFloat?
+    open var edgeInsets = UIEdgeInsetsMake(22, 0, 0, 0)
     var markXPos: CGFloat {
         get {
             return markRelativePos * lengthPerXPoint
@@ -77,15 +77,26 @@ public class CRPlotView: UIView {
         }
     }
     
-    public var markRelativePos: CGFloat = 0 {
+    open var markRelativePos: CGFloat = 0 {
         didSet {
             moveMark( markXPos )
         }
     }
     
-    public var points = [CGPoint]() {
+    open var currentPoint: CGPoint {
+        set {
+            
+        }
+        get {
+            let currentPointPosition = self.markLayer.position
+            let percent = (self.frame.height - currentPointPosition.y) / self.frame.height
+            return self.markLayer.position
+        }
+    }
+
+    open var points = [CGPoint]() {
         didSet {
-            points = points.sort{ $0.x < $1.x }
+            points = points.sorted{ $0.x < $1.x }
             
             if approximateMode {
                 points = approximateBezierCurve(points, accuracy: approximateAccuracy)
@@ -101,9 +112,9 @@ public class CRPlotView: UIView {
                 
                 for point in corrPoints {
                     let layer = CALayer()
-                    layer.bounds = CGRectMake(0, 0, 8, 8)
+                    layer.bounds = CGRect(x: 0, y: 0, width: 8, height: 8)
                     layer.cornerRadius = 4
-                    layer.backgroundColor = UIColor.redColor().CGColor
+                    layer.backgroundColor = UIColor.red.cgColor
                     layer.position = point
                     pointLayers.append( layer )
                     plotLayer.addSublayer( layer )
@@ -115,39 +126,39 @@ public class CRPlotView: UIView {
     
     var pointLayers = [CALayer]()
     
-    private let plotLayer: PlotShapeLayer = {
+    fileprivate let plotLayer: PlotShapeLayer = {
         let layer = PlotShapeLayer()
         layer.strokeEnd = 0
-        layer.strokeColor = UIColor.whiteColor().CGColor
+        layer.strokeColor = UIColor.white.cgColor
         
         layer.lineWidth = 1
-        layer.backgroundColor = UIColor.clearColor().CGColor
-        layer.fillColor = UIColor.clearColor().CGColor
+        layer.backgroundColor = UIColor.clear.cgColor
+        layer.fillColor = UIColor.clear.cgColor
         layer.lineJoin = kCALineJoinRound
 
         layer.shadowRadius = 6
-        layer.shadowColor = UIColor.whiteColor().CGColor
-        layer.shadowOffset = CGSizeMake(0, -2)
+        layer.shadowColor = UIColor.white.cgColor
+        layer.shadowOffset = CGSize(width: 0, height: -2)
         layer.shadowOpacity = 1
         
         return layer
     }()
     
-    private let markLayer: CALayer = {
+    fileprivate let markLayer: CALayer = {
        let layer = CALayer()
-        layer.frame = CGRectMake(0, 0, 10, 10)
+        layer.frame = CGRect(x: 0, y: 0, width: 10, height: 10)
         layer.cornerRadius = layer.bounds.midX
-        layer.backgroundColor = UIColor.whiteColor().CGColor
+        layer.backgroundColor = UIColor.white.cgColor
         
         layer.shadowRadius = 6
-        layer.shadowColor = UIColor.whiteColor().CGColor
-        layer.shadowOffset = CGSizeMake(0, 0)
+        layer.shadowColor = UIColor.white.cgColor
+        layer.shadowOffset = CGSize(width: 0, height: 0)
         layer.shadowOpacity = 1
-        layer.shadowPath = UIBezierPath(ovalInRect: CGRectInset(layer.frame, -6, -6)).CGPath
+        layer.shadowPath = UIBezierPath(ovalIn: layer.frame.insetBy(dx: -6, dy: -6)).cgPath
         return layer
     }()
     
-    private let scrollView: UIScrollView = {
+    fileprivate let scrollView: UIScrollView = {
         let view = UIScrollView()
         view.showsHorizontalScrollIndicator = false
         view.showsVerticalScrollIndicator = false
@@ -155,24 +166,24 @@ public class CRPlotView: UIView {
         return view
     }()
     
-    private let maskLayer: PlotShapeLayer = {
+    fileprivate let maskLayer: PlotShapeLayer = {
         let layer = PlotShapeLayer()
-        layer.backgroundColor = UIColor.clearColor().CGColor
+        layer.backgroundColor = UIColor.clear.cgColor
         return layer
     }()
     
-    private var lengthPerYPoint: CGFloat {
+    fileprivate var lengthPerYPoint: CGFloat {
         return correctedBounds.height / totalRelativeHeight
     }
-    private var lengthPerXPoint: CGFloat {
+    fileprivate var lengthPerXPoint: CGFloat {
         return correctedBounds.width / visibleLength
     }
     
-    private var threshold: CGFloat {
+    fileprivate var threshold: CGFloat {
         return startRelativeX + visibleLength
     }
     
-    private var correctedBounds: CGRect {
+    fileprivate var correctedBounds: CGRect {
         return CGRect(x: bounds.minX + edgeInsets.left,
                       y: bounds.minY + edgeInsets.top,
                       width: bounds.width - edgeInsets.left - edgeInsets.right,
@@ -180,14 +191,12 @@ public class CRPlotView: UIView {
     }
     
     //MARK: - UIView
-    override public func awakeFromNib() {
+    override open func awakeFromNib() {
         super.awakeFromNib()
-        layer.backgroundColor = UIColor.clearColor().CGColor
+        layer.backgroundColor = UIColor.clear.cgColor
         
         layer.mask = maskLayer
-//        gradientLayer.mask = maskLayer
         backgroundGradient.mask = maskLayer
-//        plotLayer.masksToBounds = true
         
         updatePlot()
         
@@ -197,17 +206,22 @@ public class CRPlotView: UIView {
         scrollView.layer.addSublayer( markLayer )
         
         let glowAnimation = createGlowAnimation()
-        markLayer.addAnimation(glowAnimation, forKey: "glowAnimation")
+        markLayer.add(glowAnimation, forKey: "glowAnimation")
         
-        vertexGradient.backgroundColor = UIColor.clearColor().CGColor
+        vertexGradient.backgroundColor = UIColor.clear.cgColor
         backgroundGradient.addSublayer( vertexGradient )
-        
+//        self.
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognizer))
+        self.addGestureRecognizer(panGesture)
+    }
+    
+    func panGestureRecognizer(_ sender: UIPanGestureRecognizer) -> Void {
         
     }
 
     let vertexGradient: RadialGradientLayer = {
-        let colors = [UIColor.whiteColor().colorWithAlphaComponent(0.6).CGColor,
-                      UIColor.whiteColor().colorWithAlphaComponent(0).CGColor]
+        let colors = [UIColor.white.withAlphaComponent(0.6).cgColor,
+                      UIColor.white.withAlphaComponent(0).cgColor]
        let gradient = RadialGradientLayer(colors: colors)
         gradient.gradColors = colors
         
@@ -220,13 +234,12 @@ public class CRPlotView: UIView {
         return gradient
     }()
     
-    public override func layoutSubviews() {
+    open override func layoutSubviews() {
         super.layoutSubviews()
         updatePlot()
         
-        scrollView.setContentOffset(CGPointMake(startRelativeX * lengthPerXPoint, 0), animated: false)
+        scrollView.setContentOffset(CGPoint(x: startRelativeX * lengthPerXPoint, y: 0), animated: false)
     }
-    
 }
 
 
@@ -245,8 +258,8 @@ private extension CRPlotView {
         
         plotLayer.frame = totalBounds
         backgroundGradient.frame = totalBounds
-        backgroundGradient.gradCenter = CGPointMake(totalBounds.midX, totalBounds.minY)
-        vertexGradient.frame = CGRectMake(0, 0, totalBounds.width, bounds.height * 2)
+        backgroundGradient.gradCenter = CGPoint(x: totalBounds.midX, y: totalBounds.minY)
+        vertexGradient.frame = CGRect(x: 0, y: 0, width: totalBounds.width, height: bounds.height * 2)
         
         let pnt = topPoint()
         let newPnt = vertexPoint()
@@ -269,25 +282,25 @@ private extension CRPlotView {
         plotLayer.strokeStart = length / totalLength
         
         let mainPath = createLinearPlotPath(finalPoints)
-        plotLayer.path = mainPath.CGPath
-        maskLayer.path = mainPath.CGPath
+        plotLayer.path = mainPath.cgPath
+        maskLayer.path = mainPath.cgPath
     
         if isItDebug {
             let pnts = correctedPoints()
-            for (index,point) in pnts.enumerate() {
+            for (index,point) in pnts.enumerated() {
                 let layer = pointLayers[index]
                 layer.position = point
             }
         }
 
         let shadowPath = mainPath
-        shadowPath.appendPath(createShadowPath())
-        shadowPath.closePath()
+        shadowPath.append(createShadowPath())
+        shadowPath.close()
         
-        plotLayer.shadowPath = shadowPath.CGPath
+        plotLayer.shadowPath = shadowPath.cgPath
     }
     
-    func moveMark(xValue: CGFloat) {
+    func moveMark(_ xValue: CGFloat) {
         let points = correctedPoints()
         
         guard !points.isEmpty else {
@@ -297,7 +310,7 @@ private extension CRPlotView {
         var newPoints = [CGPoint]()
         
         var lastIndex = 0
-        for (index,point) in points.enumerate() {
+        for (index,point) in points.enumerated() {
             if point.x > xValue || index == points.count - 1 {
                 break
             }
@@ -309,7 +322,7 @@ private extension CRPlotView {
             return
         }
         
-        var correctedPoint = CGPointZero
+        var correctedPoint = CGPoint.zero
         
         let startBoundPoint = points[1]
         let endBoundPoint   = points[points.count - 2]
@@ -336,14 +349,14 @@ private extension CRPlotView {
         let colorCoefficient:CGFloat = 1 - (correctedPoint.y / lengthPerYPoint / totalRelativeHeight)
         
         let topColor = lowColor!.interpolateToColor(highColor!, fraction: colorCoefficient)
-        let colors = [topColor.CGColor, topColor.darkColor().CGColor]
+        let colors = [topColor.cgColor, topColor.darkColor().cgColor]
         
         let strokeProgress = newLength / totalLength
         // correction according to top shift
         correctedPoint.y += correctedBounds.origin.y
         CATransaction.begin()
         CATransaction.setDisableActions( true )
-        plotLayer.shadowColor = topColor.CGColor
+        plotLayer.shadowColor = topColor.cgColor
         backgroundGradient.gradColors = colors
         backgroundGradient.setNeedsDisplay()
         plotLayer.strokeEnd = strokeProgress
@@ -357,7 +370,7 @@ private extension CRPlotView {
             var newPoint = point
             newPoint.y += 4
             return newPoint
-        }.reverse()
+        }.reversed()
         
         let path = createLinearPlotPath( corrPoints )
         return path
@@ -369,8 +382,8 @@ private extension CRPlotView {
         glowAnim.toValue   = 6
         
         let shadowPathAnim = CABasicAnimation(keyPath: "shadowPath")
-        shadowPathAnim.fromValue = UIBezierPath(ovalInRect: markLayer.bounds).CGPath
-        shadowPathAnim.toValue = UIBezierPath(ovalInRect: CGRectInset(markLayer.bounds, -6, -6)).CGPath
+        shadowPathAnim.fromValue = UIBezierPath(ovalIn: markLayer.bounds).cgPath
+        shadowPathAnim.toValue = UIBezierPath(ovalIn: markLayer.bounds.insetBy(dx: -6, dy: -6)).cgPath
         
         let groupAnim = CAAnimationGroup()
         groupAnim.animations = [shadowPathAnim, glowAnim]
@@ -384,7 +397,7 @@ private extension CRPlotView {
     
     func vertexPoint() -> CGPoint {
         
-        var point = topPoint()
+        let point = topPoint()
         let gradFrame = backgroundGradient.frame
         
         let horizontalPercent: CGFloat = 0.08
@@ -394,9 +407,9 @@ private extension CRPlotView {
         let yPercentOffset = gradFrame.height * verticalPercent
         
         if point.x < gradFrame.midX {
-            return CGPointMake(point.x + xPercentOffset, point.y + yPercentOffset)
+            return CGPoint(x: point.x + xPercentOffset, y: point.y + yPercentOffset)
         } else {
-            return CGPointMake(point.x - xPercentOffset, point.y - yPercentOffset)
+            return CGPoint(x: point.x - xPercentOffset, y: point.y - yPercentOffset)
         }
         
     }
@@ -404,7 +417,7 @@ private extension CRPlotView {
     func topPoint() -> CGPoint {
         
         guard !points.isEmpty else {
-            return CGPointZero
+            return CGPoint.zero
         }
         
         var topPoint: CGPoint!
@@ -429,7 +442,7 @@ private extension CRPlotView {
         
         // converting to real coordinates on the view
         var correctedPoints: [CGPoint] = points.map {
-            var point = CGPointMake($0.x, $0.y)
+            var point = CGPoint(x: $0.x, y: $0.y)
             
             //
             if isVerticalAxisInversed {
@@ -450,7 +463,7 @@ private extension CRPlotView {
         lastPoint.x += 1
         lastPoint.y = bounds.height + 1
         
-        correctedPoints.insert(firstPoint, atIndex: 0)
+        correctedPoints.insert(firstPoint, at: 0)
         correctedPoints.append(lastPoint)
         return correctedPoints
     }
@@ -460,25 +473,25 @@ private extension CRPlotView {
 
 extension UIColor {
     func darkColor() -> UIColor{
-        let c = CGColorGetComponents(self.CGColor)
-        let r: CGFloat = max(c[0] - 0.2, 0) 
-        let g: CGFloat = max(c[1] - 0.2, 0) 
-        let b: CGFloat = max(c[2] - 0.2, 0)
-        let a: CGFloat = c[3]
+        let c = self.cgColor.components
+        let r: CGFloat = max(c![0] - 0.2, 0) 
+        let g: CGFloat = max(c![1] - 0.2, 0) 
+        let b: CGFloat = max(c![2] - 0.2, 0)
+        let a: CGFloat = c![3]
         return UIColor(red:r, green:g, blue:b, alpha:a)
     }
     
-    func interpolateToColor(toColor: UIColor, fraction: CGFloat) -> UIColor {
+    func interpolateToColor(_ toColor: UIColor, fraction: CGFloat) -> UIColor {
         var f = max(0, fraction)
         f = min(1, fraction)
         
-        let c1 = CGColorGetComponents(self.CGColor)
-        let c2 = CGColorGetComponents(toColor.CGColor)
+        let c1 = self.cgColor.components
+        let c2 = toColor.cgColor.components
         
-        let r: CGFloat = CGFloat(c1[0] + (c2[0] - c1[0]) * f)
-        let g: CGFloat = CGFloat(c1[1] + (c2[1] - c1[1]) * f)
-        let b: CGFloat = CGFloat(c1[2] + (c2[2] - c1[2]) * f)
-        let a: CGFloat = CGFloat(c1[3] + (c2[3] - c1[3]) * f)
+        let r = c1![0] + (c2![0] - c1![0]) * f
+        let g = c1![1] + (c2![1] - c1![1]) * f
+        let b = c1![2] + (c2![2] - c1![2]) * f
+        let a = c1![3] + (c2![3] - c1![3]) * f
         
         return UIColor(red:r, green:g, blue:b, alpha:a)
     }

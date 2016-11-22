@@ -10,7 +10,7 @@ import UIKit
 
 class RadialGradientLayer: CALayer {
     
-    var gradColors: [CGColor] = [UIColor.whiteColor().CGColor, UIColor.clearColor().CGColor] {
+    var gradColors: [CGColor] = [UIColor.white.cgColor, UIColor.clear.cgColor] {
         didSet {
             self.backgroundColor = gradColors.last
         }
@@ -21,14 +21,14 @@ class RadialGradientLayer: CALayer {
     var gradLocations: [CGFloat] = [0.0, 0.5]
     
     
-    override init(layer: AnyObject) {
+    override init(layer: Any) {
         super.init(layer: layer)
     }
     
     init(colors: [CGColor]? = nil, radius: CGFloat? = nil, center: CGPoint? = nil) {
         gradCenter = center
         gradRadius = radius
-        gradColors = colors ?? [UIColor.whiteColor().CGColor, UIColor.clearColor().CGColor]
+        gradColors = colors ?? [UIColor.white.cgColor, UIColor.clear.cgColor]
         super.init()
     }
     
@@ -36,15 +36,15 @@ class RadialGradientLayer: CALayer {
         super.init()
     }
     
-    override func drawInContext(ctx: CGContext) {
-        super.drawInContext( ctx )
+    override func draw(in ctx: CGContext) {
+        super.draw( in: ctx )
         
         let radius = self.gradRadius ?? max(bounds.width, bounds.height)
         let center = self.gradCenter ?? CGPoint(x: bounds.midX, y: bounds.midY)
         let colors = gradColors
         
-        var gradient = CGGradientCreateWithColors(CGColorSpaceCreateDeviceRGB(), colors, gradLocations)
-        CGContextDrawRadialGradient(ctx, gradient, center, 0, center, radius / 2, .DrawsBeforeStartLocation)
+        let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: gradLocations)
+        ctx.drawRadialGradient(gradient!, startCenter: center, startRadius: 0, endCenter: center, endRadius: radius / 2, options: .drawsBeforeStartLocation)
     }
 }
 

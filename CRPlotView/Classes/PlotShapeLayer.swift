@@ -11,21 +11,21 @@ import UIKit
 
 class PlotShapeLayer: CAShapeLayer {
     
-    override func actionForKey(event: String) -> CAAction? {
+    override func action(forKey event: String) -> CAAction? {
         if event == "path" {
             let animation = CABasicAnimation(keyPath: event)
             animation.duration = 0.25
-            animation.fromValue = presentationLayer()?.valueForKey( event )
+            animation.fromValue = presentation()?.value( forKey: event )
             return animation
         }
         
-        return super.actionForKey( event )
+        return super.action( forKey: event )
     }
     
-    override class func needsDisplayForKey(key: String) -> Bool {
+    override class func needsDisplay(forKey key: String) -> Bool {
         if key == "path" {
             return true
         }
-        return super.needsDisplayForKey( key )
+        return super.needsDisplay( forKey: key )
     }
 }

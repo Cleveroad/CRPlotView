@@ -9,22 +9,22 @@
 import Foundation
 import UIKit
 
-func distance(p1: CGPoint, p2: CGPoint) -> CGFloat {
+func distance(_ p1: CGPoint, p2: CGPoint) -> CGFloat {
     let dx = p2.x - p1.x;
     let dy = p2.y - p1.y;
     return sqrt(dx*dx + dy*dy);
 }
 
-func pointBetween(p1: CGPoint, p2: CGPoint, progress: CGFloat) -> CGPoint {
+func pointBetween(_ p1: CGPoint, p2: CGPoint, progress: CGFloat) -> CGPoint {
     let x = p1.x + (p2.x - p1.x) * progress
     let y = p1.y + (p2.y - p1.y) * progress
-    return CGPointMake(x, y)
+    return CGPoint(x: x, y: y)
 }
 
 
 
 //MARK: - For Linear Behaviour
-func lengthLinearPath(points:[CGPoint]) -> CGFloat {
+func lengthLinearPath(_ points:[CGPoint]) -> CGFloat {
     var length: CGFloat = 0
     guard !points.isEmpty else {
         return length
@@ -38,16 +38,16 @@ func lengthLinearPath(points:[CGPoint]) -> CGFloat {
     return length
 }
 
-func createLinearPlotPath(points: [CGPoint]) -> UIBezierPath{
+func createLinearPlotPath(_ points: [CGPoint]) -> UIBezierPath{
     let path = UIBezierPath()
     guard !points.isEmpty else {
         return path
     }
     
-    path.moveToPoint(points.first!)
+    path.move(to: points.first!)
     
     for i in 1..<points.count {
-        path.addLineToPoint( points[i] )
+        path.addLine( to: points[i] )
     }
     
     return path
@@ -61,7 +61,7 @@ func createLinearPlotPath(points: [CGPoint]) -> UIBezierPath{
 
 
 
-func bezierPoint(start:CGPoint, end:CGPoint, p1:CGPoint, p2:CGPoint, progress: CGFloat) -> CGPoint {
+func bezierPoint(_ start:CGPoint, end:CGPoint, p1:CGPoint, p2:CGPoint, progress: CGFloat) -> CGPoint {
     
     let Q1 = pointBetween(start, p2:p1, progress:progress)
     let Q2 = pointBetween(p1, p2:p2, progress:progress)
@@ -75,14 +75,14 @@ func bezierPoint(start:CGPoint, end:CGPoint, p1:CGPoint, p2:CGPoint, progress: C
     return B
 }
 
-func midPointCreate(p1:CGPoint, _ p2:CGPoint) -> CGPoint {
-    return CGPointMake((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
+func midPointCreate(_ p1:CGPoint, _ p2:CGPoint) -> CGPoint {
+    return CGPoint(x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2)
 }
 
-func createPlotPath(points:[CGPoint]) -> UIBezierPath {
+func createPlotPath(_ points:[CGPoint]) -> UIBezierPath {
     
     let path = UIBezierPath()
-    path.moveToPoint( points.first! )
+    path.move( to: points.first! )
     
     
         for i in 1..<points.count {
@@ -90,23 +90,23 @@ func createPlotPath(points:[CGPoint]) -> UIBezierPath {
             let point = points[i]
     
             let controlPoints = controlPointsCreate(prevPoint, point)
-            path.addCurveToPoint(point,
+            path.addCurve(to: point,
                                  controlPoint1: controlPoints.first,
                                  controlPoint2: controlPoints.second)
         }
     return path
 }
 
-func controlPointsCreate(p1: CGPoint, _ p2 : CGPoint) -> (first: CGPoint, second: CGPoint) {
+func controlPointsCreate(_ p1: CGPoint, _ p2 : CGPoint) -> (first: CGPoint, second: CGPoint) {
     let midPoint = midPointCreate(p1, p2)
-    let topPoint = CGPointMake(midPoint.x, max(p1.y, p2.y))
-    let bottomPoint = CGPointMake(midPoint.x, min(p1.y, p2.y))
+    let topPoint = CGPoint(x: midPoint.x, y: max(p1.y, p2.y))
+    let bottomPoint = CGPoint(x: midPoint.x, y: min(p1.y, p2.y))
     return p1.y > p2.y ?
         (first: topPoint, second: bottomPoint) :
         (first: bottomPoint, second: topPoint)
 }
 
-func approximateBezierCurve(points:[CGPoint], accuracy: Int = 30) -> [CGPoint] {
+func approximateBezierCurve(_ points:[CGPoint], accuracy: Int = 30) -> [CGPoint] {
     var finalPoints = [CGPoint]()
     
     guard !points.isEmpty else {
@@ -138,9 +138,9 @@ func approximateBezierCurve(points:[CGPoint], accuracy: Int = 30) -> [CGPoint] {
     return finalPoints
 }
 
-func cubicBezierLength(start: CGPoint, p1:CGPoint, p2:CGPoint, end:CGPoint, accuracy: Int = 30) -> CGFloat {
+func cubicBezierLength(_ start: CGPoint, p1:CGPoint, p2:CGPoint, end:CGPoint, accuracy: Int = 30) -> CGFloat {
     
-    var current = CGPointZero
+    var current = CGPoint.zero
     var previous = bezierPoint(start, end:end,
                                p1:p1, p2:p2, progress: 0)
     
@@ -162,7 +162,7 @@ func cubicBezierLength(start: CGPoint, p1:CGPoint, p2:CGPoint, end:CGPoint, accu
 //MARK : - Vector logic
 
 
-func cosAngleBetweenVectors(a: CGVector, b: CGVector) -> CGFloat {
+func cosAngleBetweenVectors(_ a: CGVector, b: CGVector) -> CGFloat {
     let scalarProduct = scalarProductVector(a, vector2: b)
     let aModule = moduleVector(a)
     let bModule = moduleVector(b)
@@ -170,24 +170,24 @@ func cosAngleBetweenVectors(a: CGVector, b: CGVector) -> CGFloat {
     return scalarProduct / (aModule * bModule)
 }
 
-func moduleVector(vector: CGVector) -> CGFloat {
+func moduleVector(_ vector: CGVector) -> CGFloat {
     return sqrt(vector.dx * vector.dx + vector.dy * vector.dy)
 }
 
-func scalarProductVector(vector1: CGVector, vector2: CGVector) -> CGFloat {
+func scalarProductVector(_ vector1: CGVector, vector2: CGVector) -> CGFloat {
     return
         vector1.dx * vector2.dx +
         vector1.dy * vector2.dy
 }
 
-func CGVectorMake(p1: CGPoint, p2: CGPoint) -> CGVector {
+func CGVectorMake(_ p1: CGPoint, p2: CGPoint) -> CGVector {
     return CGVector(dx: p2.x - p1.x, dy: p2.y - p1.y)
 }
 
 
 
-func angleBetweenPoints(p1: CGPoint, p2: CGPoint) -> CGFloat {
-    let originPoint = CGPointMake(p2.x - p1.x, p2.y - p1.y)
+func angleBetweenPoints(_ p1: CGPoint, p2: CGPoint) -> CGFloat {
+    let originPoint = CGPoint(x: p2.x - p1.x, y: p2.y - p1.y)
     let bearingRadians = atan2f(Float(originPoint.y), Float(originPoint.x))
     var bearingDegrees = bearingRadians * (180 / Float(M_PI))
     bearingDegrees = bearingDegrees > 0.0 ? bearingDegrees : (360.0 + bearingDegrees)
