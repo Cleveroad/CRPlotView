@@ -29,7 +29,7 @@ class ViewController: UIViewController {
         plotView.startRelativeX      = 0
         plotView.markRelativePos     = 12
         plotView.approximateMode     = true
-
+        plotView.isVerticalAxisInversed = true
         plotView.highColor = UIColor(red:0.28, green:0.67, blue:0.16, alpha:1)
         plotView.lowColor  = UIColor(red:0.76, green:0.53, blue:0.55, alpha:1)
         
@@ -37,11 +37,9 @@ class ViewController: UIViewController {
     }
     
     func update() {
-        points = bassPoints()
-        plotView.points = points
+        plotView.points = plotView.calculatedPoints([10,8,2,6,4])
     }
-    
-    
+        
     // types of plot points
     func sinusoud() -> [CGPoint] {
         var points = [CGPoint]()
@@ -71,6 +69,7 @@ class ViewController: UIViewController {
         }
         
         points = points.sorted{$0.x < $1.x}
+
         return points
     }
     

@@ -124,6 +124,30 @@ open class CRPlotView: UIView {
         }
     }
     
+    //MARK: - NEW
+    
+    open func calculatedPoints(_ values: [CGFloat]) -> [CGPoint] {
+        var result = [CGPoint]()
+        let maxPointX = totalRelativeLength
+        let step = maxPointX / CGFloat (values.count - 1)
+        var currentXPosition = CGFloat (0.0)
+        for (_, item) in values.enumerated() {
+            result.append( CGPoint(x: currentXPosition, y: item))
+            currentXPosition += step;
+        }
+        return result
+    }
+    
+    func assosiatedYPointValues(_ values: [CGFloat]) -> [CGFloat] {
+        var result = [CGFloat]()
+        let maxPointY = totalRelativeHeight;
+        for (_, item) in values.enumerated() {
+            result.append(item / maxPointY)
+        }
+        return result
+    }
+    //MARK: -
+    
     var pointLayers = [CALayer]()
     
     fileprivate let plotLayer: PlotShapeLayer = {
@@ -157,7 +181,7 @@ open class CRPlotView: UIView {
         layer.shadowPath = UIBezierPath(ovalIn: layer.frame.insetBy(dx: -6, dy: -6)).cgPath
         return layer
     }()
-    
+
     fileprivate let scrollView: UIScrollView = {
         let view = UIScrollView()
         view.showsHorizontalScrollIndicator = false
@@ -189,7 +213,7 @@ open class CRPlotView: UIView {
                       width: bounds.width - edgeInsets.left - edgeInsets.right,
                       height: bounds.height - edgeInsets.top - edgeInsets.bottom)
     }
-    
+       
     //MARK: - UIView
     override open func awakeFromNib() {
         super.awakeFromNib()
@@ -241,8 +265,6 @@ open class CRPlotView: UIView {
         scrollView.setContentOffset(CGPoint(x: startRelativeX * lengthPerXPoint, y: 0), animated: false)
     }
 }
-
-
 
 //MARK: - Private Methods
 private extension CRPlotView {
@@ -299,7 +321,7 @@ private extension CRPlotView {
         
         plotLayer.shadowPath = shadowPath.cgPath
     }
-    
+
     func moveMark(_ xValue: CGFloat) {
         let points = correctedPoints()
         
@@ -468,8 +490,6 @@ private extension CRPlotView {
         return correctedPoints
     }
 }
-
-
 
 extension UIColor {
     func darkColor() -> UIColor{
