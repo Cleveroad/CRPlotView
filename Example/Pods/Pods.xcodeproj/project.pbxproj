@@ -15,6 +15,7 @@
 		5EF42129E7296C42CF677112338035DE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E4E89230EF59BC255123B67864ACF77 /* Foundation.framework */; };
 		6A1BE2AE1D0AE0C4008872D8 /* RadialGradientLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1BE2AD1D0AE0C4008872D8 /* RadialGradientLayer.swift */; };
 		70D7D345A7FA10196F4350184195CA5B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E4E89230EF59BC255123B67864ACF77 /* Foundation.framework */; };
+		8EB550101DE73B7F00B79915 /* VerticalGradientLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB5500F1DE73B7F00B79915 /* VerticalGradientLayer.swift */; };
 		B529F785C4AE0A2295D43AE61681BDC3 /* CRPlotView-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 3E5F32FA35B2382D1A0DC45263E2079C /* CRPlotView-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D077B6F151C6FE57F0A1A33F196887E3 /* CRPlotView-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = DBA8D55601125651C0BAB4E481BE8653 /* CRPlotView-dummy.m */; };
 /* End PBXBuildFile section */
@@ -42,6 +43,7 @@
 		61309EA6CF2DD3AD5EA099CB68E125E9 /* CRPlotView.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = CRPlotView.xcconfig; sourceTree = "<group>"; };
 		6A1BE2AD1D0AE0C4008872D8 /* RadialGradientLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RadialGradientLayer.swift; sourceTree = "<group>"; };
 		714C739E8CD010A41535F5EFBC59DE16 /* Pods-CRPlotView_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-CRPlotView_Example.release.xcconfig"; sourceTree = "<group>"; };
+		8EB5500F1DE73B7F00B79915 /* VerticalGradientLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VerticalGradientLayer.swift; sourceTree = "<group>"; };
 		ABC92EEEC68A3D636E68A87A3F1BEFE3 /* Pods-CRPlotView_Example.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = "sourcecode.module-map"; path = "Pods-CRPlotView_Example.modulemap"; sourceTree = "<group>"; };
 		B2968C4789E4520334C30339CE079C32 /* CRPlotView-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "CRPlotView-prefix.pch"; sourceTree = "<group>"; };
 		B5F5132BEF6A1518C1C41C7CEA492D9E /* CRPlotView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CRPlotView.swift; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 				D49478319B64369198D290BFB9DF0DC9 /* PlotMath.swift */,
 				E114720FE32723133CAEF1E2BAA0F78D /* PlotShapeLayer.swift */,
 				6A1BE2AD1D0AE0C4008872D8 /* RadialGradientLayer.swift */,
+				8EB5500F1DE73B7F00B79915 /* VerticalGradientLayer.swift */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -295,6 +298,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D077B6F151C6FE57F0A1A33F196887E3 /* CRPlotView-dummy.m in Sources */,
+				8EB550101DE73B7F00B79915 /* VerticalGradientLayer.swift in Sources */,
 				2FBD119B6743EBB22B87F3661363CB5C /* CRPlotView.swift in Sources */,
 				4B2291C0609EC359304E238F480F9979 /* PlotMath.swift in Sources */,
 				5CB7CD5DF5BAC299BC50ACA3E0BFF2BD /* PlotShapeLayer.swift in Sources */,

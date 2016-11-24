@@ -23,21 +23,21 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         plotView.totalRelativeHeight = 10
-        plotView.totalRelativeLength = 24
+        plotView.totalRelativeLength = visibleLength
         plotView.maxZoomScale        = 10
         plotView.visibleLength       = visibleLength
         plotView.startRelativeX      = 0
         plotView.markRelativePos     = 12
         plotView.approximateMode     = true
-        plotView.isVerticalAxisInversed = true
-        plotView.highColor = UIColor(red:0.28, green:0.67, blue:0.16, alpha:1)
-        plotView.lowColor  = UIColor(red:0.76, green:0.53, blue:0.55, alpha:1)
+        plotView.highColor = UIColor(red:0.45, green:0.84, blue:0.27, alpha:1.00)
+        plotView.lowColor  = UIColor(red:1.00, green:0.09, blue:0.36, alpha:1.00)
         
         update()
     }
     
     func update() {
-        plotView.points = plotView.calculatedPoints([10,8,2,6,4])
+        self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
+        plotView.points = self.points
     }
         
     // types of plot points
@@ -91,14 +91,14 @@ class ViewController: UIViewController {
 extension ViewController {
     
     @IBAction func sliderDidChangeValue(_ sender: UISlider) {
-        let position = (CGFloat(sender.value) / 10) * 24
+        let position = (CGFloat(sender.value) / 10) * visibleLength
         plotView.markRelativePos = position
         let value = (plotView.frame.height - plotView.currentPoint.y) / plotView.frame.height
         waveSlider.value = waveSlider.maximumValue * Float(value)
     }
     
     @IBAction func waveHighDidChange(_ sender: UISlider) {
-        let newPoint = CGPoint(x: plotView.markRelativePos, y: CGFloat(10 - sender.value))
+        let newPoint = CGPoint(x: plotView.markRelativePos, y: CGFloat(sender.value))
         
         var foundedIndex = -1
         for (index,point) in points.enumerated() {

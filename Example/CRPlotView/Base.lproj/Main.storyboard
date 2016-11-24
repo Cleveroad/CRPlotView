@@ -39,7 +39,7 @@
                                 </connections>
                             </slider>
                         </subviews>
-                        <color key="backgroundColor" red="0.30695526960784314" green="0.30695526960784314" blue="0.30695526960784314" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="0.0" green="0.23781204223632812" blue="0.35805749893188477" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="40o-1h-yR7" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" constant="24" id="0pU-TP-OQ9"/>
                             <constraint firstItem="GzM-2r-b8h" firstAttribute="top" secondItem="40o-1h-yR7" secondAttribute="bottom" constant="13" id="Eia-UC-Why"/>

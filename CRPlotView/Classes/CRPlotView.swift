@@ -124,30 +124,6 @@ open class CRPlotView: UIView {
         }
     }
     
-    //MARK: - NEW
-    
-    open func calculatedPoints(_ values: [CGFloat]) -> [CGPoint] {
-        var result = [CGPoint]()
-        let maxPointX = totalRelativeLength
-        let step = maxPointX / CGFloat (values.count - 1)
-        var currentXPosition = CGFloat (0.0)
-        for (_, item) in values.enumerated() {
-            result.append( CGPoint(x: currentXPosition, y: item))
-            currentXPosition += step;
-        }
-        return result
-    }
-    
-    func assosiatedYPointValues(_ values: [CGFloat]) -> [CGFloat] {
-        var result = [CGFloat]()
-        let maxPointY = totalRelativeHeight;
-        for (_, item) in values.enumerated() {
-            result.append(item / maxPointY)
-        }
-        return result
-    }
-    //MARK: -
-    
     var pointLayers = [CALayer]()
     
     fileprivate let plotLayer: PlotShapeLayer = {
@@ -213,7 +189,21 @@ open class CRPlotView: UIView {
                       width: bounds.width - edgeInsets.left - edgeInsets.right,
                       height: bounds.height - edgeInsets.top - edgeInsets.bottom)
     }
-       
+    
+    //MARK: - NEW
+    
+    open func calculatedPoints(_ values: [CGFloat]) -> [CGPoint] {
+        var result = [CGPoint]()
+        let maxPointX = totalRelativeLength
+        let step = maxPointX / CGFloat (values.count - 1)
+        var currentXPosition = CGFloat (0.0)
+        for (_, item) in values.enumerated() {
+            result.append( CGPoint(x: currentXPosition, y: item))
+            currentXPosition += step;
+        }
+        return result
+    }
+    
     //MARK: - UIView
     override open func awakeFromNib() {
         super.awakeFromNib()
@@ -233,14 +223,22 @@ open class CRPlotView: UIView {
         markLayer.add(glowAnimation, forKey: "glowAnimation")
         
         vertexGradient.backgroundColor = UIColor.clear.cgColor
-        backgroundGradient.addSublayer( vertexGradient )
-//        self.
+        //backgroundGradient.addSublayer( vertexGradient )
+        
+        
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognizer))
         self.addGestureRecognizer(panGesture)
     }
     
     func panGestureRecognizer(_ sender: UIPanGestureRecognizer) -> Void {
         
+        let newMarkXPos = sender.translation(in: self).x + markXPos
+        moveMark(newMarkXPos)
+//        print(newMarkXPos, markXPos)
+        if sender.state == UIGestureRecognizerState.ended {
+            markXPos = newMarkXPos
+        }
+//        print(sender.state)
     }
 
     let vertexGradient: RadialGradientLayer = {
@@ -467,7 +465,7 @@ private extension CRPlotView {
             var point = CGPoint(x: $0.x, y: $0.y)
             
             //
-            if isVerticalAxisInversed {
+            if !isVerticalAxisInversed {
                 point.y = 10 - point.y
             }
             
