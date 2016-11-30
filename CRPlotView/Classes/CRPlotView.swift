@@ -21,7 +21,7 @@ open class CRPlotView: UIView {
     
     /// points count of points that will be created between two relative points
     open var approximateAccuracy = 30
-
+    
     /// total relative length for plot scene
     open var totalRelativeLength:CGFloat = 1
     
@@ -43,7 +43,7 @@ open class CRPlotView: UIView {
             }
             
             if let maxZoom = maxZoomScale
-            , visibleLength < totalRelativeLength / maxZoom {
+                , visibleLength < totalRelativeLength / maxZoom {
                 visibleLength = totalRelativeLength / maxZoom
             }
             
@@ -93,7 +93,7 @@ open class CRPlotView: UIView {
             return self.markLayer.position
         }
     }
-
+    
     open var points = [CGPoint]() {
         didSet {
             points = points.sorted{ $0.x < $1.x }
@@ -135,7 +135,7 @@ open class CRPlotView: UIView {
         layer.backgroundColor = UIColor.clear.cgColor
         layer.fillColor = UIColor.clear.cgColor
         layer.lineJoin = kCALineJoinRound
-
+        
         layer.shadowRadius = 6
         layer.shadowColor = UIColor.white.cgColor
         layer.shadowOffset = CGSize(width: 0, height: -2)
@@ -145,7 +145,7 @@ open class CRPlotView: UIView {
     }()
     
     fileprivate let markLayer: CALayer = {
-       let layer = CALayer()
+        let layer = CALayer()
         layer.frame = CGRect(x: 0, y: 0, width: 10, height: 10)
         layer.cornerRadius = layer.bounds.midX
         layer.backgroundColor = UIColor.white.cgColor
@@ -157,7 +157,7 @@ open class CRPlotView: UIView {
         layer.shadowPath = UIBezierPath(ovalIn: layer.frame.insetBy(dx: -6, dy: -6)).cgPath
         return layer
     }()
-
+    
     fileprivate let scrollView: UIScrollView = {
         let view = UIScrollView()
         view.showsHorizontalScrollIndicator = false
@@ -218,13 +218,13 @@ open class CRPlotView: UIView {
         scrollView.layer.addSublayer( backgroundGradient )
         scrollView.layer.addSublayer( plotLayer )
         scrollView.layer.addSublayer( markLayer )
+        scrollView.layer.addSublayer( yIndicatorLayer )
         
         let glowAnimation = createGlowAnimation()
         markLayer.add(glowAnimation, forKey: "glowAnimation")
         
         vertexGradient.backgroundColor = UIColor.clear.cgColor
-        //backgroundGradient.addSublayer( vertexGradient )
-        
+        backgroundGradient.addSublayer( vertexGradient )
         
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognizer))
         self.addGestureRecognizer(panGesture)
@@ -232,19 +232,22 @@ open class CRPlotView: UIView {
     
     func panGestureRecognizer(_ sender: UIPanGestureRecognizer) -> Void {
         
+        if sender.state == UIGestureRecognizerState.began {
+            showYIndicator()
+        }
+        
         let newMarkXPos = sender.translation(in: self).x + markXPos
         moveMark(newMarkXPos)
-//        print(newMarkXPos, markXPos)
         if sender.state == UIGestureRecognizerState.ended {
             markXPos = newMarkXPos
+            hideYIndicator()
         }
-//        print(sender.state)
     }
-
+    
     let vertexGradient: RadialGradientLayer = {
         let colors = [UIColor.white.withAlphaComponent(0.6).cgColor,
                       UIColor.white.withAlphaComponent(0).cgColor]
-       let gradient = RadialGradientLayer(colors: colors)
+        let gradient = RadialGradientLayer(colors: colors)
         gradient.gradColors = colors
         
         return gradient
@@ -255,6 +258,19 @@ open class CRPlotView: UIView {
         gradient.gradLocations = [0.0, 1.0]
         return gradient
     }()
+    
+    let yIndicatorLayer: CALayer = {
+        
+        let lineLayer = CALayer()
+        lineLayer.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 0.5)
+        lineLayer.backgroundColor = UIColor.white.cgColor
+        lineLayer.opacity = 0.5
+        lineLayer.isHidden = true
+        
+        return lineLayer
+        
+    }()
+    
     
     open override func layoutSubviews() {
         super.layoutSubviews()
@@ -304,7 +320,7 @@ private extension CRPlotView {
         let mainPath = createLinearPlotPath(finalPoints)
         plotLayer.path = mainPath.cgPath
         maskLayer.path = mainPath.cgPath
-    
+        
         if isItDebug {
             let pnts = correctedPoints()
             for (index,point) in pnts.enumerated() {
@@ -312,14 +328,14 @@ private extension CRPlotView {
                 layer.position = point
             }
         }
-
+        
         let shadowPath = mainPath
         shadowPath.append(createShadowPath())
         shadowPath.close()
         
         plotLayer.shadowPath = shadowPath.cgPath
     }
-
+    
     func moveMark(_ xValue: CGFloat) {
         let points = correctedPoints()
         
@@ -381,7 +397,22 @@ private extension CRPlotView {
         backgroundGradient.setNeedsDisplay()
         plotLayer.strokeEnd = strokeProgress
         markLayer.position = correctedPoint
+        yIndicatorLayer.position = CGPoint(x: UIScreen.main.bounds.width / 2, y: correctedPoint.y)
+        print(markLayer.position)
+        
         CATransaction.commit()
+    }
+    
+    func showYIndicator() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.yIndicatorLayer.isHidden = false
+        }
+    }
+    
+    func hideYIndicator() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.yIndicatorLayer.isHidden = true
+        }
         
     }
     
@@ -390,7 +421,7 @@ private extension CRPlotView {
             var newPoint = point
             newPoint.y += 4
             return newPoint
-        }.reversed()
+            }.reversed()
         
         let path = createLinearPlotPath( corrPoints )
         return path
@@ -492,8 +523,8 @@ private extension CRPlotView {
 extension UIColor {
     func darkColor() -> UIColor{
         let c = self.cgColor.components
-        let r: CGFloat = max(c![0] - 0.2, 0) 
-        let g: CGFloat = max(c![1] - 0.2, 0) 
+        let r: CGFloat = max(c![0] - 0.2, 0)
+        let g: CGFloat = max(c![1] - 0.2, 0)
         let b: CGFloat = max(c![2] - 0.2, 0)
         let a: CGFloat = c![3]
         return UIColor(red:r, green:g, blue:b, alpha:a)
@@ -514,6 +545,3 @@ extension UIColor {
         return UIColor(red:r, green:g, blue:b, alpha:a)
     }
 }
-
-
-
