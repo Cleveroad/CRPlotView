@@ -398,7 +398,6 @@ private extension CRPlotView {
         plotLayer.strokeEnd = strokeProgress
         markLayer.position = correctedPoint
         yIndicatorLayer.position = CGPoint(x: UIScreen.main.bounds.width / 2, y: correctedPoint.y)
-        print(markLayer.position)
         
         CATransaction.commit()
     }
