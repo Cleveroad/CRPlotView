@@ -21,7 +21,6 @@ class ViewController: UIViewController {
     var visibleLength: CGFloat = 24
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         plotView.totalRelativeHeight = 10
         plotView.totalRelativeLength = visibleLength
         plotView.maxZoomScale        = 10
@@ -31,6 +30,7 @@ class ViewController: UIViewController {
         plotView.approximateMode     = true
         plotView.highColor = UIColor(red:0.45, green:0.84, blue:0.27, alpha:1.00)
         plotView.lowColor  = UIColor(red:1.00, green:0.09, blue:0.36, alpha:1.00)
+        
         
         update()
     }
@@ -126,7 +126,8 @@ extension ViewController {
         
         let length = visibleLength * 1 / sender.scale
         let relativeLength = max(min(length, plotView.totalRelativeLength), plotView.totalRelativeLength / plotView.maxZoomScale!)
-                
+        let locationTapped = sender.location(in: plotView)
+        plotView.touchPoint = locationTapped
         switch sender.state {
         case .changed:
             CATransaction.begin()

@@ -15,10 +15,15 @@ let lightBlackColor = UIColor(colorLiteralRed: 100/255, green: 100/255, blue: 10
 
 let isItDebug = false
 
+
 open class CRPlotView: UIView {
     /// allows to make curve bezier between points to make smooth lines
     open var approximateMode = false
-    
+    open var touchPoint = CGPoint()
+    open var newMarkPoint = CGFloat()
+    open var xMaxCoordinate = Int(13)
+    open var xMinCoordinate = Int(6)
+open var constraintForXPosition = NSLayoutConstraint()
     /// points count of points that will be created between two relative points
     open var approximateAccuracy = 30
     
@@ -64,7 +69,6 @@ open class CRPlotView: UIView {
     /// background color will apply by interpolating between high and low colors, depend on *markRelativePosition*
     open var highColor: UIColor?
     open var lowColor: UIColor?
-    
     
     open var maxZoomScale: CGFloat?
     open var edgeInsets = UIEdgeInsetsMake(22, 0, 0, 0)
@@ -158,6 +162,12 @@ open class CRPlotView: UIView {
         return layer
     }()
     
+    fileprivate let yPositionTextLayer = CATextLayer()
+    fileprivate let xPositionMaxLabel = UILabel()
+    fileprivate let xPositionMinLabel = UILabel()
+    fileprivate let xPositionNowLabel = UILabel()
+
+   
     fileprivate let scrollView: UIScrollView = {
         let view = UIScrollView()
         view.showsHorizontalScrollIndicator = false
@@ -219,7 +229,7 @@ open class CRPlotView: UIView {
         scrollView.layer.addSublayer( plotLayer )
         scrollView.layer.addSublayer( markLayer )
         scrollView.layer.addSublayer( yIndicatorLayer )
-        
+        yIndicatorLayer.addSublayer( yPositionTextLayer )
         let glowAnimation = createGlowAnimation()
         markLayer.add(glowAnimation, forKey: "glowAnimation")
         
@@ -228,11 +238,18 @@ open class CRPlotView: UIView {
         
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognizer))
         self.addGestureRecognizer(panGesture)
-    }
+        self.addSubview(xPositionMaxLabel)
+        self.addSubview(xPositionMinLabel)
+        self.addSubview(xPositionNowLabel)
+        
+        
+        self .addLabels()
+        }
     
     func panGestureRecognizer(_ sender: UIPanGestureRecognizer) -> Void {
         
         if sender.state == UIGestureRecognizerState.began {
+            xPositionNowLabel .isHidden = true
             showYIndicator()
         }
         
@@ -241,6 +258,30 @@ open class CRPlotView: UIView {
         if sender.state == UIGestureRecognizerState.ended {
             markXPos = newMarkXPos
             hideYIndicator()
+           newMarkPoint = markLayer.position.x
+            xPositionNowLabel .isHidden = false
+            xPositionMinLabel.isHidden = false
+            xPositionMaxLabel.isHidden = false
+            
+                if xPositionNowLabel.frame.intersects(xPositionMinLabel.frame) || xPositionNowLabel.frame.intersects(xPositionMaxLabel.frame) {
+                    xPositionNowLabel.isHidden = true
+                }
+                else {
+                    xPositionNowLabel.isHidden = false
+                }
+            
+            
+            var xPositionMarkInt:Int = Int(newMarkPoint)
+           // xPositionNowLabel.text = "\(xPositionMarkInt)"
+            var xPositionMarkIntEnd:Int = Int(xPositionMarkInt)*Int(xMaxCoordinate) / Int(self.frame.width)
+            xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd)am"
+            if (xMinCoordinate + xPositionMarkIntEnd)>12 {
+                xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd-12)pm"
+            }
+            if (xMinCoordinate + xPositionMarkIntEnd)==12 {
+                xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd)pm"
+            }
+            constraintForXPosition.constant = markLayer.position.x - markLayer.frame.width*2
         }
     }
     
@@ -282,6 +323,40 @@ open class CRPlotView: UIView {
 
 //MARK: - Private Methods
 private extension CRPlotView {
+    
+    func addLabels() {
+       // xPositionMaxLabel.text = "\(startRelativeX)"
+        xPositionMaxLabel.textColor = UIColor.white.withAlphaComponent(0.5)
+        xPositionMinLabel.textColor = UIColor.white.withAlphaComponent(0.5)
+         xPositionNowLabel.textColor = UIColor.white.withAlphaComponent(0.5)
+        xPositionMaxLabel.textAlignment = NSTextAlignment .center
+        xPositionMinLabel.textAlignment = NSTextAlignment . center
+        xPositionNowLabel.textAlignment = NSTextAlignment .center
+        xPositionMaxLabel.font = UIFont.systemFont(ofSize: 12)
+        xPositionMinLabel.font = UIFont.systemFont(ofSize: 12)
+        xPositionNowLabel.font = UIFont.systemFont(ofSize: 12)
+        let maxTrailingConstraint = NSLayoutConstraint(item: xPositionMaxLabel, attribute: .trailing, relatedBy: .equal, toItem: self, attribute: .trailing, multiplier: 1, constant: 0)
+        let maxBottomConstraint = NSLayoutConstraint(item: self, attribute: .bottom, relatedBy: .equal, toItem: xPositionMaxLabel, attribute: .bottom, multiplier: 1, constant: 0)
+        let maxWidthConstraint = NSLayoutConstraint(item: xPositionMaxLabel, attribute: NSLayoutAttribute.width, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 40)
+        let maxHeightConstraint = NSLayoutConstraint(item: xPositionMaxLabel, attribute: NSLayoutAttribute.height, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 30)
+        xPositionMaxLabel.translatesAutoresizingMaskIntoConstraints = false
+            self.addConstraints([ maxWidthConstraint, maxBottomConstraint, maxHeightConstraint, maxTrailingConstraint])
+        
+        let minLeadingConstraint = NSLayoutConstraint(item: xPositionMinLabel, attribute: .leading, relatedBy: .equal, toItem: self, attribute: .leading, multiplier: 1, constant: 0)
+        let minBottomConstraint = NSLayoutConstraint(item: self, attribute: .bottom, relatedBy: .equal, toItem: xPositionMinLabel, attribute: .bottom, multiplier: 1, constant: 0)
+        let minWidthConstraint = NSLayoutConstraint(item: xPositionMinLabel, attribute: NSLayoutAttribute.width, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 40)
+        let minHeightConstraint = NSLayoutConstraint(item: xPositionMinLabel, attribute: NSLayoutAttribute.height, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 30)
+        xPositionMinLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.addConstraints([ minWidthConstraint, minBottomConstraint, minLeadingConstraint, minHeightConstraint])
+        
+         var nowCenterYConstraint = NSLayoutConstraint(item: xPositionNowLabel, attribute: .leading, relatedBy: .equal, toItem: self, attribute: .leading, multiplier: 1, constant:0)
+        constraintForXPosition = nowCenterYConstraint
+        let nowBottomConstraint = NSLayoutConstraint(item: xPositionNowLabel, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1, constant: 0)
+        let nowWidthConstraint = NSLayoutConstraint(item: xPositionNowLabel, attribute: NSLayoutAttribute.width, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 45)
+        let nowHeightConstraint = NSLayoutConstraint(item: xPositionNowLabel, attribute: NSLayoutAttribute.height, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 30)
+        xPositionNowLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.addConstraints([nowCenterYConstraint, nowBottomConstraint, nowWidthConstraint, nowHeightConstraint])
+        }
     
     func updatePlot() {
         
@@ -334,6 +409,16 @@ private extension CRPlotView {
         shadowPath.close()
         
         plotLayer.shadowPath = shadowPath.cgPath
+        var visibleLengthInt:Int = Int(visibleLength)
+        //xPositionMaxLabel.text = "\(visibleLengthInt)"
+        xPositionMaxLabel.text = "7pm"
+        //var totalRelativeLengthInt:Int = Int(totalRelativeLength)
+        //xPositionMinLabel.text = "\(totalRelativeLengthInt)"
+        var totalRelativeLengthInt:Int = Int(touchPoint.x)
+
+        //xPositionMinLabel.text = "\(totalRelativeLengthInt)"
+        xPositionMinLabel.text = "\(xMinCoordinate)am"
+      
     }
     
     func moveMark(_ xValue: CGFloat) {
@@ -398,6 +483,18 @@ private extension CRPlotView {
         plotLayer.strokeEnd = strokeProgress
         markLayer.position = correctedPoint
         yIndicatorLayer.position = CGPoint(x: UIScreen.main.bounds.width / 2, y: correctedPoint.y)
+        var numer = 0
+        numer = Int(self.frame.height) - Int(yIndicatorLayer.position.y)
+        
+        var yPosition = 0
+        yPosition = Int(numer)*12 / Int(self.frame.height)
+        
+        yPositionTextLayer.frame = CGRect(x: 0, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
+        yPositionTextLayer.string = String(yPosition)
+        yPositionTextLayer.fontSize = 20
+        yPositionTextLayer.foregroundColor = UIColor.white.cgColor
+        
+
         
         CATransaction.commit()
     }
