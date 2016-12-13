@@ -21,9 +21,12 @@ open class CRPlotView: UIView {
     open var approximateMode = false
     open var touchPoint = CGPoint()
     open var newMarkPoint = CGFloat()
-    open var xMaxCoordinate = Int(13)
-    open var xMinCoordinate = Int(6)
-open var constraintForXPosition = NSLayoutConstraint()
+    open var xMaxCoordinate = Int(13)       // quantity of hours. if hours = false - is equal xMaxCoordinateValue
+    open var xMaxCoordinateValue = Int(7)  // Value in max X-axis coordinate
+    open var xMinCoordinate = Int(6)        // Value in min X-axis coordinate
+    open var yPositionNumber = Float(10)    // Value in max Y-axis coordinate
+    open var hours = true                  // this is hours on X-axis coordinate?
+    open var constraintForXPosition = NSLayoutConstraint()
     /// points count of points that will be created between two relative points
     open var approximateAccuracy = 30
     
@@ -252,34 +255,35 @@ open var constraintForXPosition = NSLayoutConstraint()
             xPositionNowLabel .isHidden = true
             showYIndicator()
         }
-        
         let newMarkXPos = sender.translation(in: self).x + markXPos
         moveMark(newMarkXPos)
+        
         if sender.state == UIGestureRecognizerState.ended {
             markXPos = newMarkXPos
             hideYIndicator()
            newMarkPoint = markLayer.position.x
             xPositionNowLabel .isHidden = false
-            xPositionMinLabel.isHidden = false
-            xPositionMaxLabel.isHidden = false
-            
-                if xPositionNowLabel.frame.intersects(xPositionMinLabel.frame) || xPositionNowLabel.frame.intersects(xPositionMaxLabel.frame) {
+           
+                if xPositionNowLabel.layer.frame.intersects(xPositionMinLabel.layer.frame) || xPositionNowLabel.layer.frame.intersects(xPositionMaxLabel.layer.frame) {
                     xPositionNowLabel.isHidden = true
-                }
-                else {
+                } else {
                     xPositionNowLabel.isHidden = false
                 }
             
-            
-            var xPositionMarkInt:Int = Int(newMarkPoint)
-           // xPositionNowLabel.text = "\(xPositionMarkInt)"
-            var xPositionMarkIntEnd:Int = Int(xPositionMarkInt)*Int(xMaxCoordinate) / Int(self.frame.width)
-            xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd)am"
-            if (xMinCoordinate + xPositionMarkIntEnd)>12 {
-                xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd-12)pm"
-            }
-            if (xMinCoordinate + xPositionMarkIntEnd)==12 {
-                xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd)pm"
+            if hours == true {
+                var xPositionMarkInt:Int = Int(newMarkPoint)
+                var xPositionMarkIntEnd:Int = Int(xPositionMarkInt)*Int(xMaxCoordinate) / Int(self.frame.width)
+                xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd)am"
+                if (xMinCoordinate + xPositionMarkIntEnd)>12 {
+                    xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd-12)pm"
+                }
+                if (xMinCoordinate + xPositionMarkIntEnd)==12 {
+                    xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd)pm"
+                }
+            } else {
+                var xPositionMarkInt:Int = Int(newMarkPoint)
+                var xPositionMarkIntEnd:Int = Int(xPositionMarkInt)*Int(xMaxCoordinate-xMinCoordinate) / Int(self.frame.width)
+                xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd)"
             }
             constraintForXPosition.constant = markLayer.position.x - markLayer.frame.width*2
         }
@@ -409,16 +413,14 @@ private extension CRPlotView {
         shadowPath.close()
         
         plotLayer.shadowPath = shadowPath.cgPath
-        var visibleLengthInt:Int = Int(visibleLength)
-        //xPositionMaxLabel.text = "\(visibleLengthInt)"
-        xPositionMaxLabel.text = "7pm"
-        //var totalRelativeLengthInt:Int = Int(totalRelativeLength)
-        //xPositionMinLabel.text = "\(totalRelativeLengthInt)"
         var totalRelativeLengthInt:Int = Int(touchPoint.x)
-
-        //xPositionMinLabel.text = "\(totalRelativeLengthInt)"
-        xPositionMinLabel.text = "\(xMinCoordinate)am"
-      
+        if hours == true {
+            xPositionMaxLabel.text = "\(xMaxCoordinateValue)pm"
+            xPositionMinLabel.text = "\(xMinCoordinate)am"
+        } else {
+            xPositionMaxLabel.text = "\(xMaxCoordinateValue)"
+            xPositionMinLabel.text = "\(xMinCoordinate)"
+        }
     }
     
     func moveMark(_ xValue: CGFloat) {
@@ -485,9 +487,11 @@ private extension CRPlotView {
         yIndicatorLayer.position = CGPoint(x: UIScreen.main.bounds.width / 2, y: correctedPoint.y)
         var numer = 0
         numer = Int(self.frame.height) - Int(yIndicatorLayer.position.y)
-        
+        var floatValue = Float(numer)
+        var floatFrameValue = Float((self.frame.height))
         var yPosition = 0
-        yPosition = Int(numer)*12 / Int(self.frame.height)
+        var coefficient = Float(5.818)
+        yPosition = Int((floatValue * ((yPositionNumber)+(yPositionNumber/coefficient)))  / Float(self.frame.height))
         
         yPositionTextLayer.frame = CGRect(x: 0, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
         yPositionTextLayer.string = String(yPosition)
