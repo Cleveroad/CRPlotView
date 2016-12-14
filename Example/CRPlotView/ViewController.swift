@@ -99,6 +99,7 @@ extension ViewController {
     }
     
     @IBAction func waveHighDidChange(_ sender: UISlider) {
+
         let newPoint = CGPoint(x: plotView.markRelativePos, y: CGFloat(sender.value))
         
         var foundedIndex = -1
