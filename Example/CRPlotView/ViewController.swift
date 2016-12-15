@@ -10,14 +10,13 @@ import UIKit
 import CRPlotView
 
 
-class ViewController: UIViewController {
+class ViewController: UIViewController,CRPlotViewDelegate {
 
     var points = [CGPoint]()
     @IBOutlet weak var sliderQuality: UISlider!
     @IBOutlet weak var plotView: CRPlotView!
     @IBOutlet weak var waveSlider: UISlider!
-    
-    weak var delegate: CRPlotView?
+  
     var timer = Timer()
     var visibleLength: CGFloat = 24
     override func viewDidLoad() {
@@ -32,15 +31,46 @@ class ViewController: UIViewController {
         plotView.approximateMode     = true
         plotView.highColor = UIColor(red:0.45, green:0.84, blue:0.27, alpha:1.00)
         plotView.lowColor  = UIColor(red:1.00, green:0.09, blue:0.36, alpha:1.00)
-        
-    plotView.plotView(plotView: plotView, xPointsQuantity: 10)
-        plotView.plotView(plotView: plotView, yPointsQuantity: 100)
-        //plotView.plotViewYAxisValue(plotView: plotView, TitleForVerticalAxisValue: 10 )
+        plotView.delegate = self
         update()
     }
     
+    
+    func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt{
+        return 10
+    }
+    func plotView(_ plotView: CRPlotView, pointAtIndex index: UInt) -> CGPoint{
+         var result = [CGPoint]()
+        for (element, _) in points.enumerated() {
+            result.append( CGPoint(x: element, y: Int(index)))
+           // currentXPosition += step;
+                    }
+            
+
+        return CGPoint(x: 20, y: 20)
+    }
+
+    
+    func plotView(plotView: CRPlotView, titleForHorizontalAxisValue value: Float) -> String? {
+        let array:[String] = ["One", "Two","Three","Four","Five"]
+       let znach = Int(value)
+        
+          var title = "title"
+        title = String(array[znach])
+       
+        
+        return title
+    }
+    func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Float) -> String? {
+        let titleY = "title"
+        return titleY
+    }
+
+    
     func update() {
-        self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
+        //self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
+        //self.points = plotView.calculatedPoints([1,5,2,10,8,4,8,1,5,2,10,8,4,8])
+        self.points = plotView.calculatedPoints([1,10,1])
         plotView.points = self.points
         
     }

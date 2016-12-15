@@ -9,12 +9,15 @@
 import Foundation
 import UIKit
 
-protocol CRPlotViewDelegate{
+public protocol CRPlotViewDelegate{
     
-    func plotView(plotView: CRPlotView, xPointsQuantity:Int)
-    func plotView(plotView: CRPlotView, yPointsQuantity:Int)
-   // func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Double) -> String?
-    //func plotView (plotView: CRPlotView, titleForHorizontalAxisValue value: Double) -> String?
+    //func plotView(plotView: CRPlotView)-> Int?
+
+    func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt
+    func plotView(_ plotView: CRPlotView, pointAtIndex index: UInt) -> CGPoint
+
+    func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Float) -> String?
+    func plotView (plotView: CRPlotView, titleForHorizontalAxisValue value: Float) -> String?
 }
 
 var delegate: CRPlotViewDelegate?
@@ -25,18 +28,18 @@ let lightBlackColor = UIColor(colorLiteralRed: 100/255, green: 100/255, blue: 10
 let isItDebug = false
 
 
-open class CRPlotView: UIView, CRPlotViewDelegate {
+open class CRPlotView: UIView {
     /// allows to make curve bezier between points to make smooth lines
     open var approximateMode = false
     open var touchPoint = CGPoint()
     open var newMarkPoint = CGFloat()
-    open var xMaxCoordinate = Float()
+    open var xMaxCoordinate = Float(5)
     open var xMinCoordinate = Float()
-    open var yPositionNumber = Float()
+    open var yPositionNumber = Float(10)
     open var constraintForXPosition = NSLayoutConstraint()
     /// points count of points that will be created between two relative points
     open var approximateAccuracy = 30
-    
+     open var delegate : CRPlotViewDelegate?
     /// total relative length for plot scene
     open var totalRelativeLength:CGFloat = 1
     
@@ -52,7 +55,6 @@ open class CRPlotView: UIView, CRPlotViewDelegate {
     /// visible relative length that will be showed in view
     open var visibleLength:CGFloat = 1 {
         didSet {
-            delegate = self
             if visibleLength > totalRelativeLength {
                 visibleLength = totalRelativeLength
             }
@@ -213,23 +215,6 @@ open class CRPlotView: UIView, CRPlotViewDelegate {
     }
     
     //MARK: - NEW
-    public func plotView(plotView: CRPlotView, xPointsQuantity : Int) {
-        xMaxCoordinate = Float(xPointsQuantity)
-        xPositionMaxLabel.text = "\(xMaxCoordinate)"
-    }
-    public func plotView(plotView: CRPlotView, yPointsQuantity : Int) {
-        yPositionNumber = Float(yPointsQuantity)
-    }
-
-    public func plotView(plotView: CRPlotView, titleForHorizontalAxisValue value: Double) -> String? {
-        var title = "title"
-        xPositionMaxLabel.text = "\(xMaxCoordinate)"
-        return title
-    }
-    public func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Double) -> String? {
-        var titleY = "title"
-        return titleY
-    }
     
     open func calculatedPoints(_ values: [CGFloat]) -> [CGPoint] {
         var result = [CGPoint]()
@@ -239,7 +224,9 @@ open class CRPlotView: UIView, CRPlotViewDelegate {
         for (_, item) in values.enumerated() {
             result.append( CGPoint(x: currentXPosition, y: item))
             currentXPosition += step;
-        }
+           
+            delegate?.plotView(self, pointAtIndex: UInt(item))
+                   }
         return result
     }
     
@@ -297,8 +284,15 @@ open class CRPlotView: UIView, CRPlotViewDelegate {
                 }
                 var xPositionMarkInt:Float = Float(newMarkPoint)
                 var xPositionMarkIntEnd:Float = Float(xPositionMarkInt)*Float(xMaxCoordinate-xMinCoordinate) / Float(self.frame.width)
-            xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd)"
+           // xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd)"
             
+            delegate? .plotView(plotView: self, titleForHorizontalAxisValue: (xMinCoordinate + xPositionMarkIntEnd))
+            
+            var string = delegate? .plotView(plotView: self, titleForHorizontalAxisValue: (xMinCoordinate + xPositionMarkIntEnd))
+            delegate?.numberOfPointsInPlotView(in: self)
+            print(delegate?.plotView(self, pointAtIndex: 2))
+            
+        xPositionNowLabel.text = string
             constraintForXPosition.constant = markLayer.position.x - markLayer.frame.width*2
         }
     }
