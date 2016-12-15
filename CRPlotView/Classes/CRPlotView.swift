@@ -9,6 +9,15 @@
 import Foundation
 import UIKit
 
+protocol CRPlotViewDelegate{
+    
+    func plotView(plotView: CRPlotView, xPointsQuantity:Int)
+    func plotView(plotView: CRPlotView, yPointsQuantity:Int)
+   // func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Double) -> String?
+    //func plotView (plotView: CRPlotView, titleForHorizontalAxisValue value: Double) -> String?
+}
+
+var delegate: CRPlotViewDelegate?
 let lightBlueColor = UIColor(colorLiteralRed: 0/255, green: 176/255, blue: 255/255, alpha: 1.0)
 let lightBlackColor = UIColor(colorLiteralRed: 100/255, green: 100/255, blue: 100/255, alpha: 1.0)
 
@@ -16,13 +25,14 @@ let lightBlackColor = UIColor(colorLiteralRed: 100/255, green: 100/255, blue: 10
 let isItDebug = false
 
 
-open class CRPlotView: UIView {
+open class CRPlotView: UIView, CRPlotViewDelegate {
     /// allows to make curve bezier between points to make smooth lines
     open var approximateMode = false
     open var touchPoint = CGPoint()
     open var newMarkPoint = CGFloat()
     open var xMaxCoordinate = Float()
     open var xMinCoordinate = Float()
+    open var yPositionNumber = Float()
     open var constraintForXPosition = NSLayoutConstraint()
     /// points count of points that will be created between two relative points
     open var approximateAccuracy = 30
@@ -42,6 +52,7 @@ open class CRPlotView: UIView {
     /// visible relative length that will be showed in view
     open var visibleLength:CGFloat = 1 {
         didSet {
+            delegate = self
             if visibleLength > totalRelativeLength {
                 visibleLength = totalRelativeLength
             }
@@ -99,6 +110,7 @@ open class CRPlotView: UIView {
     
     open var points = [CGPoint]() {
         didSet {
+            
             points = points.sorted{ $0.x < $1.x }
             
             if approximateMode {
@@ -189,6 +201,7 @@ open class CRPlotView: UIView {
     }
     
     fileprivate var threshold: CGFloat {
+        
         return startRelativeX + visibleLength
     }
     
@@ -200,6 +213,23 @@ open class CRPlotView: UIView {
     }
     
     //MARK: - NEW
+    public func plotView(plotView: CRPlotView, xPointsQuantity : Int) {
+        xMaxCoordinate = Float(xPointsQuantity)
+        xPositionMaxLabel.text = "\(xMaxCoordinate)"
+    }
+    public func plotView(plotView: CRPlotView, yPointsQuantity : Int) {
+        yPositionNumber = Float(yPointsQuantity)
+    }
+
+    public func plotView(plotView: CRPlotView, titleForHorizontalAxisValue value: Double) -> String? {
+        var title = "title"
+        xPositionMaxLabel.text = "\(xMaxCoordinate)"
+        return title
+    }
+    public func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Double) -> String? {
+        var titleY = "title"
+        return titleY
+    }
     
     open func calculatedPoints(_ values: [CGFloat]) -> [CGPoint] {
         var result = [CGPoint]()
@@ -457,15 +487,17 @@ private extension CRPlotView {
         plotLayer.strokeEnd = strokeProgress
         markLayer.position = correctedPoint
         yIndicatorLayer.position = CGPoint(x: UIScreen.main.bounds.width / 2, y: correctedPoint.y)
-        var numer = Int(points.first!.y) - Int(yIndicatorLayer.position.y)
+        var numer = Float(Int(points.first!.y) - Int(yIndicatorLayer.position.y))
+        var floatNumer = Float(points.first!.y)
+        var yPosition = Float(numer*(yPositionNumber + (yPositionNumber/5.818)))/(floatNumer)
         yPositionTextLayer.frame = CGRect(x: 0, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
-        yPositionTextLayer.string = String(numer)
+        yPositionTextLayer.string = String(yPosition)
         yPositionTextLayer.fontSize = 20
         yPositionTextLayer.foregroundColor = UIColor.white.cgColor
         
-        xPositionMaxLabel.text = "\(points.last!.x)"
+        //xPositionMaxLabel.text = "\(points.last!.x)"
         xPositionMinLabel.text = "\(points.first!.x)"
-        xMaxCoordinate = Float(points.last!.x)
+       // xMaxCoordinate = Float(points.last!.x)
 
         CATransaction.commit()
     }

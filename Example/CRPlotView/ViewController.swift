@@ -9,6 +9,7 @@
 import UIKit
 import CRPlotView
 
+
 class ViewController: UIViewController {
 
     var points = [CGPoint]()
@@ -16,11 +17,12 @@ class ViewController: UIViewController {
     @IBOutlet weak var plotView: CRPlotView!
     @IBOutlet weak var waveSlider: UISlider!
     
-    
+    weak var delegate: CRPlotView?
     var timer = Timer()
     var visibleLength: CGFloat = 24
     override func viewDidLoad() {
         super.viewDidLoad()
+       
         plotView.totalRelativeHeight = 10
         plotView.totalRelativeLength = visibleLength
         plotView.maxZoomScale        = 10
@@ -31,13 +33,16 @@ class ViewController: UIViewController {
         plotView.highColor = UIColor(red:0.45, green:0.84, blue:0.27, alpha:1.00)
         plotView.lowColor  = UIColor(red:1.00, green:0.09, blue:0.36, alpha:1.00)
         
-        
+    plotView.plotView(plotView: plotView, xPointsQuantity: 10)
+        plotView.plotView(plotView: plotView, yPointsQuantity: 100)
+        //plotView.plotViewYAxisValue(plotView: plotView, TitleForVerticalAxisValue: 10 )
         update()
     }
     
     func update() {
         self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
         plotView.points = self.points
+        
     }
         
     // types of plot points
