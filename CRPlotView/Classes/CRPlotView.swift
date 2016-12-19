@@ -10,8 +10,6 @@ import Foundation
 import UIKit
 
 public protocol CRPlotViewDelegate{
-    
-    //func plotView(plotView: CRPlotView)-> Int?
 
     func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt
     func plotView(_ plotView: CRPlotView, pointAtIndex index: UInt) -> CGPoint
@@ -20,7 +18,7 @@ public protocol CRPlotViewDelegate{
     func plotView (plotView: CRPlotView, titleForHorizontalAxisValue value: Float) -> String?
 }
 
-var delegate: CRPlotViewDelegate?
+
 let lightBlueColor = UIColor(colorLiteralRed: 0/255, green: 176/255, blue: 255/255, alpha: 1.0)
 let lightBlackColor = UIColor(colorLiteralRed: 100/255, green: 100/255, blue: 100/255, alpha: 1.0)
 
@@ -33,9 +31,10 @@ open class CRPlotView: UIView {
     open var approximateMode = false
     open var touchPoint = CGPoint()
     open var newMarkPoint = CGFloat()
-    open var xMaxCoordinate = Float(5)
+    open var xMaxCoordinate = Float()
     open var xMinCoordinate = Float()
     open var yPositionNumber = Float(10)
+    open var result = [CGPoint]()
     open var constraintForXPosition = NSLayoutConstraint()
     /// points count of points that will be created between two relative points
     open var approximateAccuracy = 30
@@ -215,20 +214,33 @@ open class CRPlotView: UIView {
     }
     
     //MARK: - NEW
+  
+   // open func calculatedPoints(_ values: [CGFloat]) -> [CGPoint] {
+    //    var result = [CGPoint]()
+    //    let maxPointX = totalRelativeLength
+     //   let step = maxPointX / CGFloat (values.count - 1)
+     //   var currentXPosition = CGFloat (0.0)
+      //  for (_, item) in values.enumerated() {
+      //      result.append( CGPoint(x: currentXPosition, y: item))
+       //     currentXPosition += step;
+       //
+        //    }
+      //  return result
+    //}
     
-    open func calculatedPoints(_ values: [CGFloat]) -> [CGPoint] {
+   open func reloadData() {
+        delegate?.numberOfPointsInPlotView(in: self)
         var result = [CGPoint]()
-        let maxPointX = totalRelativeLength
-        let step = maxPointX / CGFloat (values.count - 1)
-        var currentXPosition = CGFloat (0.0)
-        for (_, item) in values.enumerated() {
-            result.append( CGPoint(x: currentXPosition, y: item))
-            currentXPosition += step;
-           
-            delegate?.plotView(self, pointAtIndex: UInt(item))
-                   }
-        return result
-    }
+        var count = Int((delegate?.numberOfPointsInPlotView(in: self))!)
+        var i = UInt()
+        for i in 0..<Int(count) {
+             result.append((delegate?.plotView(self, pointAtIndex: UInt(i)))!)
+        }
+         xPositionMinLabel.text = ("\(result.first!.x)")
+         xPositionMaxLabel.text = ("\(result.last!.x)")
+         self.points = result
+         self.result = result
+        }
     
     //MARK: - UIView
     override open func awakeFromNib() {
@@ -275,24 +287,25 @@ open class CRPlotView: UIView {
             markXPos = newMarkXPos
             hideYIndicator()
            newMarkPoint = markLayer.position.x
-            xPositionNowLabel .isHidden = false
-    
-                if xPositionNowLabel.layer.frame.intersects(xPositionMinLabel.layer.frame) || xPositionNowLabel.layer.frame.intersects(xPositionMaxLabel.layer.frame) {
-                    xPositionNowLabel.isHidden = true
-                } else {
+            
+            for xCor in self.points{
+                if (Int(markRelativePos) == Int(xCor.x)) {
                     xPositionNowLabel.isHidden = false
+                    xPositionNowLabel.text = ("\(Int(xCor.x))")
+                    yPositionTextLayer.string = String(describing: Int(xCor.y))
                 }
-                var xPositionMarkInt:Float = Float(newMarkPoint)
-                var xPositionMarkIntEnd:Float = Float(xPositionMarkInt)*Float(xMaxCoordinate-xMinCoordinate) / Float(self.frame.width)
-           // xPositionNowLabel.text = "\(xMinCoordinate + xPositionMarkIntEnd)"
-            
-            delegate? .plotView(plotView: self, titleForHorizontalAxisValue: (xMinCoordinate + xPositionMarkIntEnd))
-            
-            var string = delegate? .plotView(plotView: self, titleForHorizontalAxisValue: (xMinCoordinate + xPositionMarkIntEnd))
-            delegate?.numberOfPointsInPlotView(in: self)
-            print(delegate?.plotView(self, pointAtIndex: 2))
-            
-        xPositionNowLabel.text = string
+            }
+            for xCor in self.result{
+                if (Int(markRelativePos) == Int(xCor.x)) {
+                    xPositionNowLabel.isHidden = false
+                    xPositionNowLabel.text = ("\(Int(xCor.x))")
+                    yPositionTextLayer.string = String(describing: Int(xCor.y))
+                    print("extrem")
+                }
+            }
+            if xPositionNowLabel.layer.frame.intersects(xPositionMinLabel.layer.frame) || xPositionNowLabel.layer.frame.intersects(xPositionMaxLabel.layer.frame) {
+                xPositionNowLabel.isHidden = true
+            }
             constraintForXPosition.constant = markLayer.position.x - markLayer.frame.width*2
         }
     }
@@ -481,18 +494,10 @@ private extension CRPlotView {
         plotLayer.strokeEnd = strokeProgress
         markLayer.position = correctedPoint
         yIndicatorLayer.position = CGPoint(x: UIScreen.main.bounds.width / 2, y: correctedPoint.y)
-        var numer = Float(Int(points.first!.y) - Int(yIndicatorLayer.position.y))
-        var floatNumer = Float(points.first!.y)
-        var yPosition = Float(numer*(yPositionNumber + (yPositionNumber/5.818)))/(floatNumer)
         yPositionTextLayer.frame = CGRect(x: 0, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
-        yPositionTextLayer.string = String(yPosition)
         yPositionTextLayer.fontSize = 20
         yPositionTextLayer.foregroundColor = UIColor.white.cgColor
         
-        //xPositionMaxLabel.text = "\(points.last!.x)"
-        xPositionMinLabel.text = "\(points.first!.x)"
-       // xMaxCoordinate = Float(points.last!.x)
-
         CATransaction.commit()
     }
     
@@ -504,7 +509,7 @@ private extension CRPlotView {
     
     func hideYIndicator() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.yIndicatorLayer.isHidden = true
+           // self.yIndicatorLayer.isHidden = true
         }
         
     }

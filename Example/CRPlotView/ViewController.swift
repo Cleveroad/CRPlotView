@@ -16,7 +16,8 @@ class ViewController: UIViewController,CRPlotViewDelegate {
     @IBOutlet weak var sliderQuality: UISlider!
     @IBOutlet weak var plotView: CRPlotView!
     @IBOutlet weak var waveSlider: UISlider!
-  
+    public var pointsArray = [CGPoint]()
+    
     var timer = Timer()
     var visibleLength: CGFloat = 24
     override func viewDidLoad() {
@@ -33,26 +34,20 @@ class ViewController: UIViewController,CRPlotViewDelegate {
         plotView.lowColor  = UIColor(red:1.00, green:0.09, blue:0.36, alpha:1.00)
         plotView.delegate = self
         update()
+        
     }
     
     
     func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt{
-        return 10
+        return UInt(pointsArray.count)
     }
     func plotView(_ plotView: CRPlotView, pointAtIndex index: UInt) -> CGPoint{
-         var result = [CGPoint]()
-        for (element, _) in points.enumerated() {
-            result.append( CGPoint(x: element, y: Int(index)))
-           // currentXPosition += step;
-                    }
-            
-
-        return CGPoint(x: 20, y: 20)
+        return pointsArray[Int(index)]
     }
 
     
     func plotView(plotView: CRPlotView, titleForHorizontalAxisValue value: Float) -> String? {
-        let array:[String] = ["One", "Two","Three","Four","Five"]
+        let array:[String] = ["One", "Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven"]
        let znach = Int(value)
         
           var title = "title"
@@ -68,10 +63,12 @@ class ViewController: UIViewController,CRPlotViewDelegate {
 
     
     func update() {
+       // pointsArray.append(contentsOf: sinusoud())
+            pointsArray.append(contentsOf: sinusoud())
         //self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
-        //self.points = plotView.calculatedPoints([1,5,2,10,8,4,8,1,5,2,10,8,4,8])
-        self.points = plotView.calculatedPoints([1,10,1])
-        plotView.points = self.points
+         plotView .reloadData()
+        self.points = sinusoud()
+       // plotView.points = self.points
         
     }
         
