@@ -9,6 +9,8 @@
 import Foundation
 import UIKit
 
+public var currectPointStroke = CGPoint()
+
 func distance(_ p1: CGPoint, p2: CGPoint) -> CGFloat {
     let dx = p2.x - p1.x;
     let dy = p2.y - p1.y;
@@ -53,13 +55,41 @@ func createLinearPlotPath(_ points: [CGPoint]) -> UIBezierPath{
     return path
 }
 
+func createStrokePlotPath(_ points: [CGPoint]) -> UIBezierPath{
+  let path = UIBezierPath()
+  guard !points.isEmpty else {
+    return path
+  }
+  let pointsTo = points.filter { (point) -> Bool in
+    point.x <= currectPointStroke.x
+  }
+  
+  for i in 1..<pointsTo.count {
+    if points[i].x >= currectPointStroke.x {
+      
+    }
+  }
+  path.move(to: pointsTo.first!)
+  for i in 1..<pointsTo.count {
+    path.addLine( to: points[i] )
+  }
+  var pointsNew = pointsTo
+  for i in 1..<pointsNew.count {
+    pointsNew[i].y = points[i].y - 3
+  }
+  pointsNew.reverse()
 
-
-
+  path.addLine(to: pointsNew.first!)
+  for i in 1..<pointsNew.count {
+    path.addLine( to: pointsNew[i])
+  }
+  path.addLine(to: points.first!)
+ 
+  path.close()
+  return path
+}
 
 //MARK: - Help methods
-
-
 
 func bezierPoint(_ start:CGPoint, end:CGPoint, p1:CGPoint, p2:CGPoint, progress: CGFloat) -> CGPoint {
     

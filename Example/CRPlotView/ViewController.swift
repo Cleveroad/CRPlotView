@@ -34,9 +34,22 @@ class ViewController: UIViewController,CRPlotViewDelegate {
         plotView.lowColor  = UIColor(red:1.00, green:0.09, blue:0.36, alpha:1.00)
         plotView.delegate = self
         update()
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(self.respondToRightSwipeGesture))
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(self.respondToLeftSwipeGesture))
+        swipeLeft.direction = .left
+        swipeRight.direction = .right
+        view.addGestureRecognizer(swipeRight)
+        view.addGestureRecognizer(swipeLeft)
         
     }
-    
+    func respondToLeftSwipeGesture(gesture: UIGestureRecognizer) {
+        //print("dawdw")
+        //let notificationName = Notification.Name("NotificationIdentifier")
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "LeftSwipe"), object: nil)
+    }
+    func respondToRightSwipeGesture(gesture: UIGestureRecognizer) {
+    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "RightSwipe"), object: nil)
+    }
     
     func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt{
         return UInt(pointsArray.count)
@@ -63,7 +76,6 @@ class ViewController: UIViewController,CRPlotViewDelegate {
 
     
     func update() {
-       // pointsArray.append(contentsOf: sinusoud())
             pointsArray.append(contentsOf: sinusoud())
         //self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
          plotView .reloadData()
@@ -173,7 +185,7 @@ extension ViewController {
             visibleLength = relativeLength
         }
     }
-}
+    }
 
 
 

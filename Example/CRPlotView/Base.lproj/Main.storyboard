@@ -46,6 +46,7 @@
                             </slider>
                         </subviews>
                         <color key="backgroundColor" red="0.0" green="0.23781204223632812" blue="0.35805749893188477" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <gestureRecognizers/>
                         <constraints>
                             <constraint firstItem="40o-1h-yR7" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" constant="24" id="0pU-TP-OQ9"/>
                             <constraint firstItem="GzM-2r-b8h" firstAttribute="top" secondItem="40o-1h-yR7" secondAttribute="bottom" constant="13" id="Eia-UC-Why"/>
@@ -71,6 +72,11 @@
                         <action selector="pinchTapped:" destination="vXZ-lx-hvc" id="QIP-1v-cJd"/>
                     </connections>
                 </pinchGestureRecognizer>
+                <swipeGestureRecognizer direction="right" id="2GU-un-k0i">
+                    <connections>
+                        <action selector="swipeTapped:" destination="vXZ-lx-hvc" id="9ho-hk-vwj"/>
+                    </connections>
+                </swipeGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="305" y="429"/>
         </scene>
