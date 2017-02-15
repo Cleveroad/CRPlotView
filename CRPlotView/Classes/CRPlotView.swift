@@ -36,6 +36,8 @@ open class CRPlotView: UIView {
     open var touchPoint = CGPoint()
     open var xMaxCoordinate = Float()
     open var xMinCoordinate = Float()
+    open var i = Int()
+  open var strokePointsArray = [CGPoint]()
     open var result = [CGPoint]()
     open var constraintForXPosition = NSLayoutConstraint()
     /// points count of points that will be created between two relative points
@@ -278,11 +280,26 @@ open class CRPlotView: UIView {
                 if sender.state == UIGestureRecognizerState.began {
             xPositionNowLabel .isHidden = true
             showYIndicator()
-            
+                  
         }
         let newMarkXPos = sender.translation(in: self).x + markXPos
         moveMark(newMarkXPos)
-        
+      
+      if sender.state == UIGestureRecognizerState.changed {
+        currectPointStroke = currentPoint
+        for xCor in self.result{
+          if (Int(markRelativePos) == Int(xCor.x)) {
+            
+            //xPositionNowLabel.isHidden = false
+            // xPositionNowLabel.text = ("\(Int(xCor.x))")
+            //print(xCor.y)
+            yPositionTextLayer.string = String(describing: xCor.y)
+          }
+        }
+
+      }
+
+      
         if sender.state == UIGestureRecognizerState.ended {
             markXPos = newMarkXPos
             self.reloadValuesOnXYAxis()
@@ -310,7 +327,7 @@ open class CRPlotView: UIView {
         lineLayer.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 1)
         lineLayer.backgroundColor = UIColor.white.cgColor
         lineLayer.opacity = 0.5
-        lineLayer.isHidden = true
+        lineLayer.isHidden = false
         
         return lineLayer
         
@@ -371,16 +388,38 @@ private extension CRPlotView {
     plotLayer.addSublayer(strokeGradient)
     
   }
-  
+  func culculatePointsfromCoordinate(coordinate :CGFloat) {
+    for xCor in self.points{
+            if ((xCor.x) <= coordinate) && ((xCor.x) >= markRelativePos)  {
+
+        var ind = Int()
+        ind = self.points.index(of: xCor)!
+              //var strokePointsArray = [CGPoint]()
+              
+            //i = 0
+             
+               //  strokePointsArray[i] = points[ind]
+                strokePointsArray .insert(xCor, at: Int(self.i))
+               i += 1
+            // strokePointsArray .append(xCor)
+             //strokePointsArray .append(contentsOf: [points[ind]])
+              
+      }
+    }
+    
+  }
     @objc func respondToLeftSwipeGesture() {
         for xCor in self.result{
             if (Int(markRelativePos) < Int(xCor.x)) {
+              culculatePointsfromCoordinate(coordinate: CGFloat(xCor.x))
                 self.setMarkPositionX(xPosition: xCor.x)
+              
                 self.reloadValuesOnXYAxis()
                 break
             }}}
     
     @objc func respondToRightSwipeGesture() {
+      
         for xCor in self.result{
             if (Int(markRelativePos) <= Int(xCor.x)) {
                 var ind = Int()
@@ -391,13 +430,28 @@ private extension CRPlotView {
                    self.setMarkPositionX(xPosition: self.result[ind-1].x)
                 }
                 self.reloadValuesOnXYAxis()
-                break }}}
+                break }
+      }
+  }
     
     func setMarkPositionX(xPosition: CGFloat ) {
-        UIView.animate(withDuration: 0.1) {
+        UIView.animate(withDuration: 0.5) {
             self.markLayer.frame = CGRect(x: 0, y:0, width: 10, height: 10)
              self.plotLayer.strokeEnd = xPosition
             self.markRelativePos = xPosition
+          
+          let animation = CAKeyframeAnimation()
+          
+          animation.keyPath = "position"
+          animation.repeatCount = 0
+          animation.duration = 3.0
+          //animation.calculationMode = kCAAnimationLinear
+          animation.path = self.plotLayer.path
+          // animation.values = [CGPoint(x: 10, y: 10), CGPoint(x: 150, y: 32), CGPoint(x: 270, y: 0)]
+          animation.values = self.strokePointsArray
+          //animation.keyTimes = [0, 0.5, 1]
+         // self.markLayer.add(animation, forKey: nil)
+         // print(self.currentPoint.x / self.lengthPerXPoint)
         }
     }
     
@@ -409,6 +463,7 @@ private extension CRPlotView {
       currectPointStroke = currentPoint
         for xCor in self.points{
             if (Int(markRelativePos) == Int(xCor.x)) {
+              
                 xPositionNowLabel.isHidden = false
                 xPositionNowLabel.text = ("\(Int(xCor.x))")
                 yPositionTextLayer.string = String(describing: Int(xCor.y))
@@ -551,6 +606,8 @@ private extension CRPlotView {
         yPositionTextLayer.frame = CGRect(x: 0, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
         yPositionTextLayer.fontSize = 20
         yPositionTextLayer.foregroundColor = UIColor.white.cgColor
+      
+             //yPositionTextLayer.string = String(describing: markLayer.position.y / lengthPerYPoint)
         CATransaction.commit()
     }
     

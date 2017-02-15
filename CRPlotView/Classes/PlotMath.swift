@@ -75,7 +75,7 @@ func createStrokePlotPath(_ points: [CGPoint]) -> UIBezierPath{
   }
   var pointsNew = pointsTo
   for i in 1..<pointsNew.count {
-    pointsNew[i].y = points[i].y - 3
+    pointsNew[i].y = points[i].y + 3
   }
   pointsNew.reverse()
 

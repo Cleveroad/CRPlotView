@@ -40,11 +40,12 @@ class ViewController: UIViewController,CRPlotViewDelegate {
         swipeRight.direction = .right
         view.addGestureRecognizer(swipeRight)
         view.addGestureRecognizer(swipeLeft)
-        
+        sliderQuality.value = Float((Float(sliderQuality.maximumValue) * Float(plotView.markRelativePos)) / Float(visibleLength))
+        let value = (plotView.frame.height - plotView.currentPoint.y) / plotView.frame.height
+        waveSlider.value = waveSlider.maximumValue * Float(value)
+      
     }
     func respondToLeftSwipeGesture(gesture: UIGestureRecognizer) {
-        //print("dawdw")
-        //let notificationName = Notification.Name("NotificationIdentifier")
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: "LeftSwipe"), object: nil)
     }
     func respondToRightSwipeGesture(gesture: UIGestureRecognizer) {
@@ -76,14 +77,27 @@ class ViewController: UIViewController,CRPlotViewDelegate {
 
     
     func update() {
-            pointsArray.append(contentsOf: sinusoud())
+            pointsArray.append(contentsOf: test())
         //self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
          plotView .reloadData()
-        self.points = sinusoud()
+        self.points = test()
        // plotView.points = self.points
         
     }
-        
+  func test() -> [CGPoint] {
+    var points = [CGPoint]()
+    points.append( CGPoint(x: 0, y: 5))
+    points.append( CGPoint(x: 3, y: 2))
+    points.append( CGPoint(x: 5, y: 5))
+    points.append( CGPoint(x: 12, y: 8))
+    points.append( CGPoint(x: 15, y: 10))
+    points.append( CGPoint(x: 18, y: 2))
+    points.append( CGPoint(x: 20, y: 0))
+
+    points.append( CGPoint(x: 24, y: 2))
+    return points
+  }
+
     // types of plot points
     func sinusoud() -> [CGPoint] {
         var points = [CGPoint]()
