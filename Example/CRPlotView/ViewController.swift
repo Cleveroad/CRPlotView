@@ -20,6 +20,7 @@ class ViewController: UIViewController,CRPlotViewDelegate {
     
     var timer = Timer()
     var visibleLength: CGFloat = 24
+    
     override func viewDidLoad() {
         super.viewDidLoad()
        
@@ -45,11 +46,12 @@ class ViewController: UIViewController,CRPlotViewDelegate {
         waveSlider.value = waveSlider.maximumValue * Float(value)
       
     }
+    
     func respondToLeftSwipeGesture(gesture: UIGestureRecognizer) {
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: "LeftSwipe"), object: nil)
     }
     func respondToRightSwipeGesture(gesture: UIGestureRecognizer) {
-    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "RightSwipe"), object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "RightSwipe"), object: nil)
     }
     
     func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt{
@@ -62,9 +64,9 @@ class ViewController: UIViewController,CRPlotViewDelegate {
     
     func plotView(plotView: CRPlotView, titleForHorizontalAxisValue value: Float) -> String? {
         let array:[String] = ["One", "Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven"]
-       let znach = Int(value)
+        let znach = Int(value)
         
-          var title = "title"
+        var title = "title"
         title = String(array[znach])
        
         
@@ -79,24 +81,24 @@ class ViewController: UIViewController,CRPlotViewDelegate {
     func update() {
             pointsArray.append(contentsOf: test())
         //self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
-         plotView .reloadData()
+         plotView.reloadData()
         self.points = test()
        // plotView.points = self.points
         
     }
-  func test() -> [CGPoint] {
-    var points = [CGPoint]()
-    points.append( CGPoint(x: 0, y: 5))
-    points.append( CGPoint(x: 3, y: 2))
-    points.append( CGPoint(x: 5, y: 5))
-    points.append( CGPoint(x: 12, y: 8))
-    points.append( CGPoint(x: 15, y: 10))
-    points.append( CGPoint(x: 18, y: 2))
-    points.append( CGPoint(x: 20, y: 0))
-
-    points.append( CGPoint(x: 24, y: 2))
-    return points
-  }
+      func test() -> [CGPoint] {
+        var points = [CGPoint]()
+        points.append( CGPoint(x: 0, y: 5))
+        points.append( CGPoint(x: 3, y: 2))
+        points.append( CGPoint(x: 5, y: 5))
+        points.append( CGPoint(x: 12, y: 8))
+        points.append( CGPoint(x: 15, y: 10))
+        points.append( CGPoint(x: 18, y: 2))
+        points.append( CGPoint(x: 20, y: 0))
+        points.append( CGPoint(x: 24, y: 2))
+        
+        return points
+    }
 
     // types of plot points
     func sinusoud() -> [CGPoint] {
@@ -108,6 +110,7 @@ class ViewController: UIViewController,CRPlotViewDelegate {
         points.append( CGPoint(x: 24, y: 2))
         return points
     }
+    
     func straightLine() -> [CGPoint] {
         var points = [CGPoint]()
         points.append( CGPoint(x: 0, y: 0))
@@ -117,6 +120,7 @@ class ViewController: UIViewController,CRPlotViewDelegate {
         points.append( CGPoint(x: 24, y: 0))
         return points
     }
+    
     func randomPoints(_ count: Int) -> [CGPoint] {
         var points = [CGPoint]()
         for _ in 0..<count {
@@ -199,13 +203,4 @@ extension ViewController {
             visibleLength = relativeLength
         }
     }
-    }
-
-
-
-
-
-
-
-
-
+}

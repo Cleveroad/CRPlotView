@@ -23,9 +23,7 @@ public protocol CRPlotViewDelegate{
 let lightBlueColor = UIColor(colorLiteralRed: 0/255, green: 176/255, blue: 255/255, alpha: 1.0)
 let lightBlackColor = UIColor(colorLiteralRed: 100/255, green: 100/255, blue: 100/255, alpha: 1.0)
 
-
 let isItDebug = false
-
 
 open class CRPlotView: UIView {
     /// allows to make curve bezier between points to make smooth lines
@@ -37,7 +35,7 @@ open class CRPlotView: UIView {
     open var xMaxCoordinate = Float()
     open var xMinCoordinate = Float()
     open var i = Int()
-  open var strokePointsArray = [CGPoint]()
+    open var strokePointsArray = [CGPoint]()
     open var result = [CGPoint]()
     open var constraintForXPosition = NSLayoutConstraint()
     /// points count of points that will be created between two relative points
@@ -153,8 +151,6 @@ open class CRPlotView: UIView {
         layer.fillColor = UIColor.clear.cgColor
         layer.lineJoin = kCALineJoinRound
       
-      
-        
         layer.shadowRadius = 6
         layer.shadowColor = UIColor.white.cgColor
         layer.shadowOffset = CGSize(width: 0, height: -2)
@@ -200,12 +196,12 @@ open class CRPlotView: UIView {
     fileprivate var lengthPerYPoint: CGFloat {
         return correctedBounds.height / totalRelativeHeight
     }
+    
     fileprivate var lengthPerXPoint: CGFloat {
         return correctedBounds.width / visibleLength
     }
     
     fileprivate var threshold: CGFloat {
-        
         return startRelativeX + visibleLength
     }
     
@@ -244,7 +240,7 @@ open class CRPlotView: UIView {
          self.points = result
          self.result = result
    
-        }
+    }
   
     //MARK: - UIView
     override open func awakeFromNib() {
@@ -274,30 +270,29 @@ open class CRPlotView: UIView {
         self.addSubview(xPositionNowLabel)
       
         self .addLabels()
-        }
+    }
     
     func panGestureRecognizer(_ sender: UIPanGestureRecognizer) -> Void {
-                if sender.state == UIGestureRecognizerState.began {
+        if sender.state == UIGestureRecognizerState.began {
             xPositionNowLabel .isHidden = true
             showYIndicator()
-                  
         }
+        
         let newMarkXPos = sender.translation(in: self).x + markXPos
         moveMark(newMarkXPos)
       
-      if sender.state == UIGestureRecognizerState.changed {
-        currectPointStroke = currentPoint
-        for xCor in self.result{
-          if (Int(markRelativePos) == Int(xCor.x)) {
-            
-            //xPositionNowLabel.isHidden = false
-            // xPositionNowLabel.text = ("\(Int(xCor.x))")
-            //print(xCor.y)
-            yPositionTextLayer.string = String(describing: xCor.y)
-          }
+        if sender.state == UIGestureRecognizerState.changed {
+            currectPointStroke = currentPoint
+            for xCor in self.result{
+              if (Int(markRelativePos) == Int(xCor.x)) {
+                
+                //xPositionNowLabel.isHidden = false
+                // xPositionNowLabel.text = ("\(Int(xCor.x))")
+                //print(xCor.y)
+                yPositionTextLayer.string = String(describing: xCor.y)
+              }
+            }
         }
-
-      }
 
       
         if sender.state == UIGestureRecognizerState.ended {
@@ -337,7 +332,7 @@ open class CRPlotView: UIView {
     open override func layoutSubviews() {
         super.layoutSubviews()
         updatePlot()
-      addStroketoPoints(points: points)
+        addStroketoPoints(points: points)
         scrollView.setContentOffset(CGPoint(x: startRelativeX * lengthPerXPoint, y: 0), animated: false)
     }
 }
@@ -375,7 +370,7 @@ private extension CRPlotView {
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.respondToLeftSwipeGesture), name: NSNotification.Name(rawValue: "LeftSwipe"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.respondToRightSwipeGesture), name: NSNotification.Name(rawValue: "RightSwipe"), object: nil)
-        }
+    }
   
   func addStroketoPoints(points :[CGPoint]) {
 
@@ -515,7 +510,7 @@ private extension CRPlotView {
         let length = lengthLinearPath(partPoints)
         let totalLength = lengthLinearPath(finalPoints)
         
-       plotLayer.strokeStart = length / totalLength
+        plotLayer.strokeStart = length / totalLength
         let mainPath = createLinearPlotPath(finalPoints)
         plotLayer.path = mainPath.cgPath
         maskLayer.path = mainPath.cgPath
@@ -534,7 +529,7 @@ private extension CRPlotView {
         
         plotLayer.shadowPath = shadowPath.cgPath
         var totalRelativeLengthInt:Int = Int(touchPoint.x)
-            }
+    }
     
     func moveMark(_ xValue: CGFloat) {
         let points = correctedPoints()
@@ -607,7 +602,7 @@ private extension CRPlotView {
         yPositionTextLayer.fontSize = 20
         yPositionTextLayer.foregroundColor = UIColor.white.cgColor
       
-             //yPositionTextLayer.string = String(describing: markLayer.position.y / lengthPerYPoint)
+        //yPositionTextLayer.string = String(describing: markLayer.position.y / lengthPerYPoint)
         CATransaction.commit()
     }
     
