@@ -64,7 +64,7 @@ open class CRPlotView: UIView {
                 , visibleLength < totalRelativeLength / maxZoom {
                 visibleLength = totalRelativeLength / maxZoom
             }
-            
+
             updatePlot()
         }
     }
@@ -233,13 +233,12 @@ open class CRPlotView: UIView {
         var count = Int((delegate?.numberOfPointsInPlotView(in: self))!)
         var i = UInt()
         for i in 0..<Int(count) {
-             result.append((delegate?.plotView(self, pointAtIndex: UInt(i)))!)
+            result.append((delegate?.plotView(self, pointAtIndex: UInt(i)))!)
         }
-         xPositionMinLabel.text = ("\(result.first!.x)")
-         xPositionMaxLabel.text = ("\(result.last!.x)")
-         self.points = result
-         self.result = result
-   
+        xPositionMinLabel.text = ("\(result.first!.x)")
+        xPositionMaxLabel.text = ("\(result.last!.x)")
+        self.points = result
+        self.result = result
     }
   
     //MARK: - UIView
@@ -373,7 +372,6 @@ private extension CRPlotView {
     }
   
   func addStroketoPoints(points :[CGPoint]) {
-
     let color1 = UIColor.white.cgColor
     let color2 = UIColor.clear.cgColor
     strokeGradient.colors = [color1 as AnyObject, color2 as AnyObject]
@@ -381,8 +379,8 @@ private extension CRPlotView {
     strokeGradient.endPoint = CGPoint(x: (currentPoint.x/layer.frame.width)-0.6, y: 0.0)
     strokeGradient.frame = bounds
     plotLayer.addSublayer(strokeGradient)
-    
   }
+    
   func culculatePointsfromCoordinate(coordinate :CGFloat) {
     for xCor in self.points{
             if ((xCor.x) <= coordinate) && ((xCor.x) >= markRelativePos)  {
@@ -401,7 +399,6 @@ private extension CRPlotView {
               
       }
     }
-    
   }
     @objc func respondToLeftSwipeGesture() {
         for xCor in self.result{

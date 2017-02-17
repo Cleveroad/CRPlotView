@@ -157,9 +157,11 @@ func approximateBezierCurve(_ points:[CGPoint], accuracy: Int = 30) -> [CGPoint]
         var progressPoint: CGPoint!
         for i in 0..<accuracy {
             progress = CGFloat(i) / CGFloat(accuracy)
-            progressPoint = bezierPoint(prevPnt, end: currPnt,
-                                     p1: midPnts.first, p2: midPnts.second,
-                                     progress: progress)
+            progressPoint = bezierPoint(prevPnt,
+                                        end: currPnt,
+                                        p1: midPnts.first,
+                                        p2: midPnts.second,
+                                        progress: progress)
             finalPoints.append( progressPoint )
         }
         prevPnt = currPnt
@@ -190,8 +192,6 @@ func cubicBezierLength(_ start: CGPoint, p1:CGPoint, p2:CGPoint, end:CGPoint, ac
 
 
 //MARK : - Vector logic
-
-
 func cosAngleBetweenVectors(_ a: CGVector, b: CGVector) -> CGFloat {
     let scalarProduct = scalarProductVector(a, vector2: b)
     let aModule = moduleVector(a)
@@ -224,7 +224,3 @@ func angleBetweenPoints(_ p1: CGPoint, p2: CGPoint) -> CGFloat {
     return CGFloat(bearingDegrees - 90)
     
 }
-
-
-
-

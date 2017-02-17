@@ -57,6 +57,7 @@ class ViewController: UIViewController,CRPlotViewDelegate {
     func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt{
         return UInt(pointsArray.count)
     }
+    
     func plotView(_ plotView: CRPlotView, pointAtIndex index: UInt) -> CGPoint{
         return pointsArray[Int(index)]
     }
@@ -72,6 +73,7 @@ class ViewController: UIViewController,CRPlotViewDelegate {
         
         return title
     }
+    
     func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Float) -> String? {
         let titleY = "title"
         return titleY
@@ -79,9 +81,9 @@ class ViewController: UIViewController,CRPlotViewDelegate {
 
     
     func update() {
-            pointsArray.append(contentsOf: test())
+        pointsArray.append(contentsOf: test())
         //self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
-         plotView.reloadData()
+        plotView.reloadData()
         self.points = test()
        // plotView.points = self.points
         
@@ -186,7 +188,6 @@ extension ViewController {
     }
     
     @IBAction func pinchTapped(_ sender: UIPinchGestureRecognizer) {
-        
         let length = visibleLength * 1 / sender.scale
         let relativeLength = max(min(length, plotView.totalRelativeLength), plotView.totalRelativeLength / plotView.maxZoomScale!)
         let locationTapped = sender.location(in: plotView)
