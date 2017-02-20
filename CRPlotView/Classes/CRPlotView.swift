@@ -60,11 +60,10 @@ open class CRPlotView: UIView {
                 visibleLength = totalRelativeLength
             }
             
-            if let maxZoom = maxZoomScale
-                , visibleLength < totalRelativeLength / maxZoom {
+            if let maxZoom = maxZoomScale, visibleLength < totalRelativeLength / maxZoom {
                 visibleLength = totalRelativeLength / maxZoom
             }
-
+            
             updatePlot()
         }
     }
@@ -212,22 +211,7 @@ open class CRPlotView: UIView {
                       height: bounds.height - edgeInsets.top - edgeInsets.bottom)
     }
     
-    //MARK: - NEW
-  
-   // open func calculatedPoints(_ values: [CGFloat]) -> [CGPoint] {
-    //    var result = [CGPoint]()
-    //    let maxPointX = totalRelativeLength
-     //   let step = maxPointX / CGFloat (values.count - 1)
-     //   var currentXPosition = CGFloat (0.0)
-      //  for (_, item) in values.enumerated() {
-      //      result.append( CGPoint(x: currentXPosition, y: item))
-       //     currentXPosition += step;
-       //
-        //    }
-      //  return result
-    //}
-    
-   open func reloadData() {
+    open func reloadData() {
         delegate?.numberOfPointsInPlotView(in: self)
         var result = [CGPoint]()
         var count = Int((delegate?.numberOfPointsInPlotView(in: self))!)
@@ -268,7 +252,7 @@ open class CRPlotView: UIView {
         self.addSubview(xPositionMinLabel)
         self.addSubview(xPositionNowLabel)
       
-        self .addLabels()
+        self.addLabels()
     }
     
     func panGestureRecognizer(_ sender: UIPanGestureRecognizer) -> Void {
@@ -333,6 +317,18 @@ open class CRPlotView: UIView {
         updatePlot()
         addStroketoPoints(points: points)
         scrollView.setContentOffset(CGPoint(x: startRelativeX * lengthPerXPoint, y: 0), animated: false)
+    }
+    
+    open func zoomPlot(with scale: CGFloat, at point: CGPoint) {
+        var zoomPoint = point
+        zoomPoint.x *= scale
+        touchPoint = zoomPoint
+        let length = visibleLength * 1 / scale
+        let relativeLength = max(min(length, self.totalRelativeLength), self.totalRelativeLength / self.maxZoomScale!)
+        CATransaction.begin()
+        CATransaction.setDisableActions( true )
+        self.visibleLength = relativeLength
+        CATransaction.commit()
     }
 }
 
@@ -408,7 +404,9 @@ private extension CRPlotView {
               
                 self.reloadValuesOnXYAxis()
                 break
-            }}}
+            }
+        }
+    }
     
     @objc func respondToRightSwipeGesture() {
       
@@ -480,6 +478,8 @@ private extension CRPlotView {
         let size = CGSize(width: lengthPerXPoint * totalRelativeLength, height: correctedBounds.height)
         let totalBounds = CGRect(origin: correctedBounds.origin,
                                  size: size)
+        
+        scrollView.contentOffset = CGPoint(x: touchPoint.x, y: 0)
         
         scrollView.frame = bounds
         scrollView.contentSize = CGSize(width: lengthPerXPoint * totalRelativeLength, height: bounds.height)
