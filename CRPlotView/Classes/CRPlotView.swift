@@ -40,7 +40,7 @@ open class CRPlotView: UIView {
     open var constraintForXPosition = NSLayoutConstraint()
     /// points count of points that will be created between two relative points
     open var approximateAccuracy = 30
-     open var delegate : CRPlotViewDelegate?
+    open var delegate : CRPlotViewDelegate?
     /// total relative length for plot scene
     open var totalRelativeLength:CGFloat = 1
     
@@ -64,7 +64,7 @@ open class CRPlotView: UIView {
                 visibleLength = totalRelativeLength / maxZoom
             }
             
-            updatePlot()
+            updatePlotWithFocus()
         }
     }
     
@@ -211,6 +211,8 @@ open class CRPlotView: UIView {
                       height: bounds.height - edgeInsets.top - edgeInsets.bottom)
     }
     
+    fileprivate var focusPoint: CGPoint = CGPoint.zero
+    
     open func reloadData() {
         delegate?.numberOfPointsInPlotView(in: self)
         var result = [CGPoint]()
@@ -246,8 +248,10 @@ open class CRPlotView: UIView {
         
         vertexGradient.backgroundColor = UIColor.clear.cgColor
         backgroundGradient.addSublayer( vertexGradient )
+        let zoomPinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(pinchGestureRecognizerAction(_:)))
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognizer))
         self.addGestureRecognizer(panGesture)
+        self.addGestureRecognizer(zoomPinchGesture)
         self.addSubview(xPositionMaxLabel)
         self.addSubview(xPositionMinLabel)
         self.addSubview(xPositionNowLabel)
@@ -268,7 +272,6 @@ open class CRPlotView: UIView {
             currectPointStroke = currentPoint
             for xCor in self.result{
               if (Int(markRelativePos) == Int(xCor.x)) {
-                
                 //xPositionNowLabel.isHidden = false
                 // xPositionNowLabel.text = ("\(Int(xCor.x))")
                 //print(xCor.y)
@@ -282,6 +285,20 @@ open class CRPlotView: UIView {
             markXPos = newMarkXPos
             self.reloadValuesOnXYAxis()
       }
+    }
+    
+    func pinchGestureRecognizerAction(_ sender: UIPinchGestureRecognizer) {
+        if sender.state == .began {
+            touchPoint = sender.location(in: self)
+        }
+        if sender.state == .changed {
+            let currentScale = scrollView.contentSize.width / correctedBounds.width
+            print(currentScale)
+            let pinchLocation = sender.location(in: self)
+            let centeredPinchLocation = CGPoint(x: touchPoint.x * currentScale - correctedBounds.midX, y: 0)
+            zoomPlot(with: sender.scale, at: centeredPinchLocation)
+            sender.scale = 1
+        }
     }
     
     let vertexGradient: RadialGradientLayer = {
@@ -320,14 +337,12 @@ open class CRPlotView: UIView {
     }
     
     open func zoomPlot(with scale: CGFloat, at point: CGPoint) {
-        var zoomPoint = point
-        zoomPoint.x *= scale
-        touchPoint = zoomPoint
         let length = visibleLength * 1 / scale
         let relativeLength = max(min(length, self.totalRelativeLength), self.totalRelativeLength / self.maxZoomScale!)
+        focusPoint = point
         CATransaction.begin()
         CATransaction.setDisableActions( true )
-        self.visibleLength = relativeLength
+        visibleLength = relativeLength
         CATransaction.commit()
     }
 }
@@ -396,6 +411,26 @@ private extension CRPlotView {
       }
     }
   }
+    ///Search nearest point for given point if there no such point, creates it.
+//    func point(at point: CGPoint) -> CGPoint {
+//        let newPoint = CGPoint(x: plotView.markRelativePos, y: CGFloat(sender.value))
+//        
+//        var foundedIndex = -1
+//        for (index,point) in points.enumerated() {
+//            if (newPoint.x - 1)...(newPoint.x + 1) ~= point.x {
+//                foundedIndex = index
+//                break
+//            }
+//        }
+//        
+//        if foundedIndex == -1 {
+//            points.append( newPoint )
+//        } else {
+//            let correctedPoint = CGPoint(x: points[foundedIndex].x, y: newPoint.y)
+//            points[foundedIndex] = correctedPoint
+//        }
+//    }
+    
     @objc func respondToLeftSwipeGesture() {
         for xCor in self.result{
             if (Int(markRelativePos) < Int(xCor.x)) {
@@ -420,7 +455,8 @@ private extension CRPlotView {
                    self.setMarkPositionX(xPosition: self.result[ind-1].x)
                 }
                 self.reloadValuesOnXYAxis()
-                break }
+                break
+            }
       }
   }
     
@@ -472,14 +508,17 @@ private extension CRPlotView {
         }
         constraintForXPosition.constant = markLayer.position.x - markLayer.frame.width*2
     }
-
+    
+    func updatePlotWithFocus() {
+        scrollView.contentOffset = CGPoint(x: focusPoint.x, y: 0)
+        updatePlot()
+    }
+    
     func updatePlot() {
       
         let size = CGSize(width: lengthPerXPoint * totalRelativeLength, height: correctedBounds.height)
         let totalBounds = CGRect(origin: correctedBounds.origin,
                                  size: size)
-        
-        scrollView.contentOffset = CGPoint(x: touchPoint.x, y: 0)
         
         scrollView.frame = bounds
         scrollView.contentSize = CGSize(width: lengthPerXPoint * totalRelativeLength, height: bounds.height)
@@ -525,7 +564,6 @@ private extension CRPlotView {
         shadowPath.close()
         
         plotLayer.shadowPath = shadowPath.cgPath
-        var totalRelativeLengthInt:Int = Int(touchPoint.x)
     }
     
     func moveMark(_ xValue: CGFloat) {

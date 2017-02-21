@@ -190,7 +190,7 @@ extension ViewController {
     @IBAction func pinchTapped(_ sender: UIPinchGestureRecognizer) {
 //        let length = visibleLength * 1 / sender.scale
 //        let relativeLength = max(min(length, plotView.totalRelativeLength), plotView.totalRelativeLength / plotView.maxZoomScale!)
-        var locationTapped = sender.location(in: plotView)
+//        var locationTapped = sender.location(in: plotView)
 //        plotView.touchPoint = locationTapped
 //        switch sender.state {
 //        case .changed:
@@ -204,6 +204,6 @@ extension ViewController {
 //            visibleLength = relativeLength
 //        }
         
-        plotView.zoomPlot(with: sender.scale, at: locationTapped)
+//        plotView.zoomPlot(with: sender.scale, at: locationTapped)
     }
 }
