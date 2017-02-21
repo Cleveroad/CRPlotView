@@ -61,31 +61,40 @@ class ViewController: UIViewController,CRPlotViewDelegate {
     func plotView(_ plotView: CRPlotView, pointAtIndex index: UInt) -> CGPoint{
         return pointsArray[Int(index)]
     }
-
-    
+  
+    func markLayerMoved(plotView: CRPlotView, with zoomScale: CGFloat) {
+      if plotView.visibleLength == 24 {
+      let value = (plotView.frame.height - plotView.currentPoint.y) / plotView.frame.height
+      waveSlider.value = waveSlider.maximumValue * Float(value)
+      sliderQuality.value = (sliderQuality.maximumValue * Float(plotView.currentPoint.x)) / Float(plotView.frame.width)
+      } else {
+        let value = (plotView.frame.height - plotView.currentPoint.y) / plotView.frame.height
+        waveSlider.value = waveSlider.maximumValue * Float(value)
+        sliderQuality.value = (sliderQuality.maximumValue * Float(plotView.currentPoint.x)) / Float(zoomScale)
+      }
+    }
+ 
     func plotView(plotView: CRPlotView, titleForHorizontalAxisValue value: Float) -> String? {
         let array:[String] = ["One", "Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven"]
         let znach = Int(value)
         
         var title = "title"
         title = String(array[znach])
-       
-        
+ 
         return title
     }
     
     func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Float) -> String? {
-        let titleY = "title"
-        return titleY
+      let titleY = "title"
+      return titleY
     }
-
     
     func update() {
-        pointsArray.append(contentsOf: test())
-        //self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
-        plotView.reloadData()
-        self.points = test()
-       // plotView.points = self.points
+      pointsArray.append(contentsOf: test())
+      //self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
+      plotView.reloadData()
+      self.points = test()
+     // plotView.points = self.points
         
     }
       func test() -> [CGPoint] {

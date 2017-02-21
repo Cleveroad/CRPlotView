@@ -14,7 +14,7 @@ public protocol CRPlotViewDelegate{
 
     func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt
     func plotView(_ plotView: CRPlotView, pointAtIndex index: UInt) -> CGPoint
-
+    func markLayerMoved(plotView: CRPlotView, with zoomScale: CGFloat)
     func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Float) -> String?
     func plotView (plotView: CRPlotView, titleForHorizontalAxisValue value: Float) -> String?
 }
@@ -25,7 +25,7 @@ let lightBlackColor = UIColor(colorLiteralRed: 100/255, green: 100/255, blue: 10
 
 let isItDebug = false
 
-open class CRPlotView: UIView {
+open class CRPlotView: UIView, UIScrollViewDelegate {
     /// allows to make curve bezier between points to make smooth lines
     let strokeLayer = CAShapeLayer()
     let strokeGradient = CAGradientLayer()
@@ -221,6 +221,7 @@ open class CRPlotView: UIView {
         for i in 0..<Int(count) {
             result.append((delegate?.plotView(self, pointAtIndex: UInt(i)))!)
         }
+        scrollView.delegate = self
         xPositionMinLabel.text = ("\(result.first!.x)")
         xPositionMaxLabel.text = ("\(result.last!.x)")
         self.points = result
@@ -263,26 +264,29 @@ open class CRPlotView: UIView {
         if sender.state == UIGestureRecognizerState.began {
             xPositionNowLabel .isHidden = true
             showYIndicator()
+            self.reloadValuesOnXYAxis()
         }
         
         let newMarkXPos = sender.translation(in: self).x + markXPos
         moveMark(newMarkXPos)
       
         if sender.state == UIGestureRecognizerState.changed {
-            currectPointStroke = currentPoint
-            for xCor in self.result{
-              if (Int(markRelativePos) == Int(xCor.x)) {
-                //xPositionNowLabel.isHidden = false
-                // xPositionNowLabel.text = ("\(Int(xCor.x))")
-                //print(xCor.y)
-                yPositionTextLayer.string = String(describing: xCor.y)
-              }
-            }
+          self.delegate?.markLayerMoved(plotView: self, with: scrollView.contentSize.width)
+//            currectPointStroke = currentPoint
+//            for xCor in self.result{
+//              if (Int(markRelativePos) == Int(xCor.x)) {
+//                //xPositionNowLabel.isHidden = false
+//                // xPositionNowLabel.text = ("\(Int(xCor.x))")
+//                //print(xCor.y)
+//                yPositionTextLayer.string = String(describing: xCor.y)
+//              }
+//            }
         }
 
       
         if sender.state == UIGestureRecognizerState.ended {
             markXPos = newMarkXPos
+            showYIndicator()
             self.reloadValuesOnXYAxis()
       }
     }
@@ -300,7 +304,16 @@ open class CRPlotView: UIView {
             sender.scale = 1
         }
     }
-    
+  
+  public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    yIndicatorLayer.frame = CGRect(x: 0, y: markLayer.position.y, width: scrollView.contentSize.width, height: 1)
+    yPositionTextLayer.frame = CGRect(x: scrollView.contentOffset.x, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
+    var pathNew = createStrokePlotPath(points).cgPath
+    strokeLayer.path = pathNew
+    strokeGradient.mask = strokeLayer
+
+  }
+  
     let vertexGradient: RadialGradientLayer = {
         let colors = [UIColor.white.withAlphaComponent(0.6).cgColor,
                       UIColor.white.withAlphaComponent(0).cgColor]
@@ -438,13 +451,13 @@ private extension CRPlotView {
                 self.setMarkPositionX(xPosition: xCor.x)
               
                 self.reloadValuesOnXYAxis()
+                self.delegate?.markLayerMoved(plotView: self, with: scrollView.contentSize.width)
                 break
             }
         }
     }
     
     @objc func respondToRightSwipeGesture() {
-      
         for xCor in self.result{
             if (Int(markRelativePos) <= Int(xCor.x)) {
                 var ind = Int()
@@ -455,6 +468,7 @@ private extension CRPlotView {
                    self.setMarkPositionX(xPosition: self.result[ind-1].x)
                 }
                 self.reloadValuesOnXYAxis()
+                self.delegate?.markLayerMoved(plotView: self, with: scrollView.contentSize.width)
                 break
             }
       }
@@ -482,11 +496,11 @@ private extension CRPlotView {
     }
     
     func reloadValuesOnXYAxis() {
-      var pathNew = createStrokePlotPath(points).cgPath
-      strokeLayer.path = pathNew
-      strokeGradient.mask = strokeLayer
+      //var pathNew = createStrokePlotPath(points).cgPath
+     // strokeLayer.path = pathNew
+      //strokeGradient.mask = strokeLayer
       
-      currectPointStroke = currentPoint
+      //currectPointStroke = currentPoint
         for xCor in self.points{
             if (Int(markRelativePos) == Int(xCor.x)) {
               
@@ -506,7 +520,12 @@ private extension CRPlotView {
         if xPositionNowLabel.layer.frame.intersects(xPositionMinLabel.layer.frame) || xPositionNowLabel.layer.frame.intersects(xPositionMaxLabel.layer.frame) {
             xPositionNowLabel.isHidden = true
         }
+      if scrollView.contentSize.width / correctedBounds.width == 1 {
         constraintForXPosition.constant = markLayer.position.x - markLayer.frame.width*2
+      } else {
+       // constraintForXPosition.constant = (scrollView.contentSize.width * (markLayer.position.x - markLayer.frame.width*2)) / correctedBounds.width
+        //constraintForXPosition.constant = (markLayer.position.x - markLayer.frame.width*2) / (scrollView.contentSize.width / correctedBounds.width)
+      }
     }
     
     func updatePlotWithFocus() {
@@ -519,15 +538,16 @@ private extension CRPlotView {
         let size = CGSize(width: lengthPerXPoint * totalRelativeLength, height: correctedBounds.height)
         let totalBounds = CGRect(origin: correctedBounds.origin,
                                  size: size)
-        
         scrollView.frame = bounds
         scrollView.contentSize = CGSize(width: lengthPerXPoint * totalRelativeLength, height: bounds.height)
-        
+        yIndicatorLayer.frame = CGRect(x: 0, y: markLayer.position.y, width: scrollView.contentSize.width, height: 1)
+        yPositionTextLayer.frame = CGRect(x: scrollView.contentOffset.x, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
+      
         plotLayer.frame = totalBounds
         backgroundGradient.frame = totalBounds
         backgroundGradient.gradCenter = CGPoint(x: totalBounds.midX, y: totalBounds.minY)
         vertexGradient.frame = CGRect(x: 0, y: 0, width: totalBounds.width, height: bounds.height * 2)
-        
+      
         let pnt = topPoint()
         let newPnt = vertexPoint()
         
@@ -572,7 +592,6 @@ private extension CRPlotView {
         guard !points.isEmpty else {
             return
         }
-        
         var newPoints = [CGPoint]()
         
         var lastIndex = 0
@@ -632,8 +651,9 @@ private extension CRPlotView {
         plotLayer.strokeEnd = strokeProgress
         
         markLayer.position = correctedPoint
-        yIndicatorLayer.position = CGPoint(x: UIScreen.main.bounds.width / 2, y: correctedPoint.y)
+        yIndicatorLayer.frame = CGRect(x: scrollView.contentOffset.x, y: markLayer.position.y, width: UIScreen.main.bounds.width, height: 1)
         yPositionTextLayer.frame = CGRect(x: 0, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
+      
         yPositionTextLayer.fontSize = 20
         yPositionTextLayer.foregroundColor = UIColor.white.cgColor
       
@@ -644,6 +664,7 @@ private extension CRPlotView {
     func showYIndicator() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             self.yIndicatorLayer.isHidden = false
+            self.setNeedsDisplay()
         }
     }
     
