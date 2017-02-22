@@ -29,6 +29,8 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
     /// allows to make curve bezier between points to make smooth lines
     let strokeLayer = CAShapeLayer()
     let strokeGradient = CAGradientLayer()
+     open var panGesture: UIPanGestureRecognizer?
+     open var longTapGesture: UILongPressGestureRecognizer?
 
     open var approximateMode = false
     open var touchPoint = CGPoint()
@@ -250,8 +252,14 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
         vertexGradient.backgroundColor = UIColor.clear.cgColor
         backgroundGradient.addSublayer( vertexGradient )
         let zoomPinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(pinchGestureRecognizerAction(_:)))
-        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognizer))
-        self.addGestureRecognizer(panGesture)
+        panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognizer))
+        longTapGesture = UILongPressGestureRecognizer(target: self, action: #selector(longTapGesture(_:)))
+        longTapGesture?.minimumPressDuration = 0.5
+        if let pan = panGesture, let longTap = longTapGesture {
+        self.addGestureRecognizer(pan)
+        self.addGestureRecognizer(longTap)
+        longTap.isEnabled = false
+        }
         self.addGestureRecognizer(zoomPinchGesture)
         self.addSubview(xPositionMaxLabel)
         self.addSubview(xPositionMinLabel)
@@ -259,14 +267,24 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
       
         self.addLabels()
     }
-    
+  
+  func longTapGesture(_ sender: UILongPressGestureRecognizer) -> Void {
+    sender.location(in: scrollView).x == markXPos
+    let newMarkXPos = sender.location(in: scrollView).x
+    moveMark(newMarkXPos)
+    self.delegate?.markLayerMoved(plotView: self, with: scrollView.contentSize.width)
+    markXPos = newMarkXPos
+    if sender.state == UIGestureRecognizerState.ended {
+    reloadValuesOnXYAxis()
+    }
+  }
+  
     func panGestureRecognizer(_ sender: UIPanGestureRecognizer) -> Void {
         if sender.state == UIGestureRecognizerState.began {
             xPositionNowLabel .isHidden = true
             showYIndicator()
             self.reloadValuesOnXYAxis()
         }
-        
         let newMarkXPos = sender.translation(in: self).x + markXPos
         moveMark(newMarkXPos)
       
@@ -306,12 +324,18 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
     }
   
   public func scrollViewDidScroll(_ scrollView: UIScrollView) {
-    yIndicatorLayer.frame = CGRect(x: 0, y: markLayer.position.y, width: scrollView.contentSize.width, height: 1)
-    yPositionTextLayer.frame = CGRect(x: scrollView.contentOffset.x, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
-    var pathNew = createStrokePlotPath(points).cgPath
-    strokeLayer.path = pathNew
-    strokeGradient.mask = strokeLayer
-
+      yIndicatorLayer.frame = CGRect(x: 0, y: markLayer.position.y, width: scrollView.contentSize.width, height: 1)
+      yPositionTextLayer.frame = CGRect(x: scrollView.contentOffset.x, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
+      var pathNew = createStrokePlotPath(points).cgPath
+      strokeLayer.path = pathNew
+      strokeGradient.mask = strokeLayer
+      if scrollView.contentSize.width / correctedBounds.width != 1.0 {
+        panGesture?.isEnabled = false
+        longTapGesture?.isEnabled = true
+    } else {
+      panGesture?.isEnabled = true
+      longTapGesture?.isEnabled = false
+    }
   }
   
     let vertexGradient: RadialGradientLayer = {
@@ -384,7 +408,7 @@ private extension CRPlotView {
         let minHeightConstraint = NSLayoutConstraint(item: xPositionMinLabel, attribute: NSLayoutAttribute.height, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 30)
         self.addConstraints([ minWidthConstraint, minBottomConstraint, minLeadingConstraint, minHeightConstraint])
         
-         var nowCenterYConstraint = NSLayoutConstraint(item: xPositionNowLabel, attribute: .leading, relatedBy: .equal, toItem: self, attribute: .leading, multiplier: 1, constant:0)
+         var nowCenterYConstraint = NSLayoutConstraint(item: xPositionNowLabel, attribute: .leading, relatedBy: .equal, toItem: scrollView, attribute: .leading, multiplier: 1, constant:0)
         constraintForXPosition = nowCenterYConstraint
         let nowBottomConstraint = NSLayoutConstraint(item: xPositionNowLabel, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1, constant: 0)
         let nowWidthConstraint = NSLayoutConstraint(item: xPositionNowLabel, attribute: NSLayoutAttribute.width, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: 45)
@@ -496,11 +520,6 @@ private extension CRPlotView {
     }
     
     func reloadValuesOnXYAxis() {
-      //var pathNew = createStrokePlotPath(points).cgPath
-     // strokeLayer.path = pathNew
-      //strokeGradient.mask = strokeLayer
-      
-      //currectPointStroke = currentPoint
         for xCor in self.points{
             if (Int(markRelativePos) == Int(xCor.x)) {
               
@@ -518,14 +537,14 @@ private extension CRPlotView {
             }
         }
         if xPositionNowLabel.layer.frame.intersects(xPositionMinLabel.layer.frame) || xPositionNowLabel.layer.frame.intersects(xPositionMaxLabel.layer.frame) {
-            xPositionNowLabel.isHidden = true
+           // xPositionNowLabel.isHidden = true
         }
       if scrollView.contentSize.width / correctedBounds.width == 1 {
         constraintForXPosition.constant = markLayer.position.x - markLayer.frame.width*2
       } else {
-       // constraintForXPosition.constant = (scrollView.contentSize.width * (markLayer.position.x - markLayer.frame.width*2)) / correctedBounds.width
-        //constraintForXPosition.constant = (markLayer.position.x - markLayer.frame.width*2) / (scrollView.contentSize.width / correctedBounds.width)
-      }
+        //constraintForXPosition.constant = (scrollView.contentSize.width / (markLayer.position.x - markLayer.frame.width*2)) / correctedBounds.width
+      //  constraintForXPosition.constant = (markLayer.position.x - markLayer.frame.width*2) / (scrollView.contentSize.width / correctedBounds.width)
+     }
     }
     
     func updatePlotWithFocus() {
@@ -552,7 +571,7 @@ private extension CRPlotView {
         let newPnt = vertexPoint()
         
         vertexGradient.position = newPnt
-        
+        addStroketoPoints(points: points)
         backgroundGradient.setNeedsDisplay()
         vertexGradient.setNeedsDisplay()
         
@@ -670,7 +689,7 @@ private extension CRPlotView {
     
     func hideYIndicator() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.yIndicatorLayer.isHidden = true
+           // self.yIndicatorLayer.isHidden = true
         }
         
     }
