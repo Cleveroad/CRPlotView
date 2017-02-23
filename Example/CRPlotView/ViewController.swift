@@ -169,7 +169,12 @@ extension ViewController {
         plotView.markRelativePos = position
         let value = (plotView.frame.height - plotView.currentPoint.y) / plotView.frame.height
         waveSlider.value = waveSlider.maximumValue * Float(value)
+        sliderQuality.addTarget(self, action: #selector(sliderDidEndSliding), for: .touchUpInside)
     }
+  
+  func sliderDidEndSliding() {
+    plotView.reloadValuesOnXYAxis()
+  }
     
     @IBAction func waveHighDidChange(_ sender: UISlider) {
 
