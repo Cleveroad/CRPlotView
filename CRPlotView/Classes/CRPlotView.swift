@@ -137,7 +137,10 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
                     plotLayer.addSublayer( layer )
                 }
             }
+            addStroketoPoints(points: points)
             updatePlot()
+            moveMark( markXPos )
+         
         }
     }
     
@@ -230,7 +233,8 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
     }
   
  open func reloadValuesOnXYAxis() {
-    updatePlot()
+      updatePlot()
+      moveMark(markXPos)
     for xCor in self.points{
       if (Int(markRelativePos) == Int(xCor.x)) {
         xPositionNowLabel.isHidden = false
@@ -263,8 +267,8 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
         
         layer.mask = maskLayer
         backgroundGradient.mask = maskLayer
-        
-        updatePlot()
+        moveMark(markXPos)
+        reloadValuesOnXYAxis()
         addSubview( scrollView )
         scrollView.layer.addSublayer( backgroundGradient )
         scrollView.layer.addSublayer( plotLayer )
@@ -313,7 +317,7 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
         }
         let newMarkXPos = sender.translation(in: self).x + markXPos
         moveMark(newMarkXPos)
-      
+      updatePlot()
         if sender.state == UIGestureRecognizerState.changed {
           self.delegate?.markLayerMoved(plotView: self, with: scrollView.contentSize.width)
         }
@@ -341,6 +345,8 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
       yIndicatorLayer.frame = CGRect(x: 0, y: markLayer.position.y, width: scrollView.contentSize.width, height: 1)
       yPositionTextLayer.frame = CGRect(x: scrollView.contentOffset.x, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
       constraintForXPosition.constant = markXPos - markLayer.frame.width*2
+      moveMark( markXPos )
+      updatePlot()
       if scrollView.contentSize.width / correctedBounds.width != 1.0 {
         panGesture?.isEnabled = false
         longTapGesture?.isEnabled = true
@@ -380,8 +386,8 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
     
     open override func layoutSubviews() {
         super.layoutSubviews()
-        updatePlot()
-        addStroketoPoints(points: points)
+        moveMark(markXPos)
+        reloadValuesOnXYAxis()
         scrollView.setContentOffset(CGPoint(x: startRelativeX * lengthPerXPoint, y: 0), animated: false)
     }
     
@@ -485,8 +491,8 @@ private extension CRPlotView {
             if (Int(markRelativePos) < Int(xCor.x)) {
               culculatePointsfromCoordinate(coordinate: CGFloat(xCor.x))
                 self.setMarkPositionX(xPosition: xCor.x)
-              
                 self.reloadValuesOnXYAxis()
+                self.moveMark(markXPos)
                 self.delegate?.markLayerMoved(plotView: self, with: scrollView.contentSize.width)
                 break
             }
@@ -503,6 +509,7 @@ private extension CRPlotView {
                 } else {
                    self.setMarkPositionX(xPosition: self.result[ind-1].x)
                 }
+                self.moveMark(markXPos)
                 self.reloadValuesOnXYAxis()
                 self.delegate?.markLayerMoved(plotView: self, with: scrollView.contentSize.width)
                 break
@@ -583,7 +590,7 @@ private extension CRPlotView {
         backgroundGradient.setNeedsDisplay()
         vertexGradient.setNeedsDisplay()
         
-        moveMark( markXPos )
+        //moveMark( markXPos )
         guard !points.isEmpty else {
             return
         }

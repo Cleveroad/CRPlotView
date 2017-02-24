@@ -100,13 +100,13 @@ class ViewController: UIViewController,CRPlotViewDelegate {
       func test() -> [CGPoint] {
         var points = [CGPoint]()
         points.append( CGPoint(x: 0, y: 5))
-        points.append( CGPoint(x: 3, y: 2))
-        points.append( CGPoint(x: 5, y: 5))
-        points.append( CGPoint(x: 12, y: 8))
-        points.append( CGPoint(x: 15, y: 10))
+        points.append( CGPoint(x: 3, y: 3))
+        points.append( CGPoint(x: 5, y: 7))
+        points.append( CGPoint(x: 12, y: 10))
+        points.append( CGPoint(x: 15, y: 7))
         points.append( CGPoint(x: 18, y: 2))
-        points.append( CGPoint(x: 20, y: 0))
-        points.append( CGPoint(x: 24, y: 2))
+        points.append( CGPoint(x: 20, y: 1))
+        points.append( CGPoint(x: 24, y: 5))
         
         return points
     }
