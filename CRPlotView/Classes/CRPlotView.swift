@@ -138,8 +138,9 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
                 }
             }
             addStroketoPoints(points: points)
-            updatePlot()
+            reloadValuesOnXYAxis()
             moveMark( markXPos )
+          
          
         }
     }
@@ -241,14 +242,14 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
         xPositionNowLabel.text = ("\(Int(xCor.x))")
         yPositionTextLayer.string = String(describing: Int(xCor.y))
       }
-    }
+  }
     for xCor in self.result{
       if (Int(markRelativePos) == Int(xCor.x)) {
         xPositionNowLabel.isHidden = false
         xPositionNowLabel.text = ("\(Int(xCor.x))")
         yPositionTextLayer.string = String(describing: Int(xCor.y))
       }
-    }
+  }
     if xPositionNowLabel.layer.frame.intersects(xPositionMinLabel.layer.frame) || xPositionNowLabel.layer.frame.intersects(xPositionMaxLabel.layer.frame) {
       // xPositionNowLabel.isHidden = true
     }
@@ -386,9 +387,9 @@ open class CRPlotView: UIView, UIScrollViewDelegate {
     
     open override func layoutSubviews() {
         super.layoutSubviews()
-        moveMark(markXPos)
-        reloadValuesOnXYAxis()
-        scrollView.setContentOffset(CGPoint(x: startRelativeX * lengthPerXPoint, y: 0), animated: false)
+      scrollView.setContentOffset(CGPoint(x: startRelativeX * lengthPerXPoint, y: 0), animated: false)
+      awakeFromNib()
+      reloadValuesOnXYAxis()
     }
     
     open func zoomPlot(with scale: CGFloat, at point: CGPoint) {
