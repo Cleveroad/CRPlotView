@@ -11,10 +11,8 @@ import UIKit
 
 
 public protocol CRPlotViewDelegate{
-
     func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt
     func plotView(_ plotView: CRPlotView, pointAtIndex index: UInt) -> CGPoint
-
     func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Float) -> String?
     func plotView (plotView: CRPlotView, titleForHorizontalAxisValue value: Float) -> String?
 }
@@ -26,8 +24,6 @@ let lightBlackColor = UIColor(colorLiteralRed: 100/255, green: 100/255, blue: 10
 let isItDebug = false
 
 open class CRPlotView: UIView {
-    let strokeLayer = CAShapeLayer()
-    let strokeGradient = CAGradientLayer()
     let markTrackingCurveOffset: CGFloat = 2
     /// allows to make curve bezier between points to make smooth lines
     open var approximateMode = true
@@ -155,17 +151,17 @@ open class CRPlotView: UIView {
         
         return layer
     }()
-    
-    fileprivate let markTrackingGradientLayer: CAGradientLayer = {
+
+    fileprivate let offsetCurveGradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
         layer.colors = [UIColor.clear.cgColor, UIColor.white.cgColor]
         layer.locations = [0.0, 1]
         layer.startPoint = CGPoint(x: 0, y: 0)
-        layer.endPoint = CGPoint(x: 1, y: 0)
+        layer.endPoint = CGPoint(x: 0.75, y: 0)
         return layer
     }()
     
-    fileprivate let markTrackingGradientMask: CAShapeLayer = {
+    fileprivate let offsetCurveMaskLayer: CAShapeLayer = {
         let layer = CAShapeLayer()
         layer.backgroundColor = UIColor.clear.cgColor
         return layer
@@ -256,7 +252,6 @@ open class CRPlotView: UIView {
         scrollView.layer.addSublayer( plotLayer )
         scrollView.layer.addSublayer( markLayer )
         scrollView.layer.addSublayer( yIndicatorLayer )
-        scrollView.layer.addSublayer(markTrackingGradientLayer)
         yIndicatorLayer.addSublayer( yPositionTextLayer )
         let glowAnimation = createGlowAnimation()
         markLayer.add(glowAnimation, forKey: "glowAnimation")
@@ -392,13 +387,7 @@ private extension CRPlotView {
     }
   
   func addStroketoPoints(points :[CGPoint]) {
-    let color1 = UIColor.white.cgColor
-    let color2 = UIColor.clear.cgColor
-    strokeGradient.colors = [color1 as AnyObject, color2 as AnyObject]
-    strokeGradient.startPoint = CGPoint(x: (currentPoint.x/layer.frame.width), y: 0.0)
-    strokeGradient.endPoint = CGPoint(x: (currentPoint.x/layer.frame.width)-0.5, y: 0.0)
-    strokeGradient.frame = correctedBounds
-    scrollView.layer.insertSublayer(strokeGradient, at: 0)
+    scrollView.layer.insertSublayer(offsetCurveGradientLayer, at: 0)
   }
     
   func culculatePointsfromCoordinate(coordinate :CGFloat) {
@@ -483,10 +472,7 @@ private extension CRPlotView {
     }
     
     func reloadValuesOnXYAxis() {
-      var pathNew = createStrokePlotPath(points).cgPath
-      strokeLayer.path = pathNew
-      strokeGradient.mask = strokeLayer
-      
+
       currectPointStroke = currentPoint
         for xCor in self.points{
             if (Int(markRelativePos) == Int(xCor.x)) {
@@ -618,12 +604,6 @@ private extension CRPlotView {
         let colors = [topColor.cgColor, topColor.darkColor().cgColor]
         let strokeProgress = newLength / totalLength
 
-        var pathNew = offsetCurvePath(with: newPoints, offset: markTrackingCurveOffset).cgPath
-        strokeLayer.path = pathNew
-        strokeGradient.mask = strokeLayer
-        strokeGradient.startPoint = CGPoint(x: (currentPoint.x/layer.frame.width), y: 0.0)
-        strokeGradient.endPoint = CGPoint(x: (currentPoint.x/layer.frame.width)-0.6, y: 0.0)
-        
         // correction according to top shift
         correctedPoint.y += correctedBounds.origin.y
         CATransaction.begin()
@@ -634,13 +614,23 @@ private extension CRPlotView {
         plotLayer.strokeEnd = strokeProgress
         
         markLayer.position = correctedPoint
+        updateOffsetCurve(for: newPoints)
         yIndicatorLayer.position = CGPoint(x: UIScreen.main.bounds.width / 2, y: correctedPoint.y)
         yPositionTextLayer.frame = CGRect(x: 0, y:-yPositionTextLayer.frame.height / 2, width: 50, height: 50)
         yPositionTextLayer.fontSize = 20
         yPositionTextLayer.foregroundColor = UIColor.white.cgColor
       
-        //yPositionTextLayer.string = String(describing: markLayer.position.y / lengthPerYPoint)
         CATransaction.commit()
+    }
+    
+    func updateOffsetCurve(for points: [CGPoint]) {
+        var offsetMaskPath = offsetCurvePath(with: points, offset: markTrackingCurveOffset).cgPath
+        let color1 = UIColor.clear.cgColor
+        let color2 = UIColor.white.cgColor
+        offsetCurveGradientLayer.colors = [color1 as AnyObject, color2 as AnyObject]
+        offsetCurveGradientLayer.frame = CGRect(origin: correctedBounds.origin, size: CGSize(width: currentPoint.x, height: correctedBounds.height))
+        offsetCurveMaskLayer.path = offsetMaskPath
+        offsetCurveGradientLayer.mask = offsetCurveMaskLayer
     }
     
     func showYIndicator() {
