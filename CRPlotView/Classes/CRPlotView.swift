@@ -26,10 +26,10 @@ let lightBlackColor = UIColor(colorLiteralRed: 100/255, green: 100/255, blue: 10
 let isItDebug = false
 
 open class CRPlotView: UIView {
-    /// allows to make curve bezier between points to make smooth lines
     let strokeLayer = CAShapeLayer()
     let strokeGradient = CAGradientLayer()
-
+    let markTrackingCurveOffset: CGFloat = 2
+    /// allows to make curve bezier between points to make smooth lines
     open var approximateMode = true
     open var touchPoint = CGPoint()
     open var xMaxCoordinate = Float()
@@ -63,7 +63,6 @@ open class CRPlotView: UIView {
             if let maxZoom = maxZoomScale, visibleLength < totalRelativeLength / maxZoom {
                 visibleLength = totalRelativeLength / maxZoom
             }
-            
             updatePlotWithFocus()
         }
     }
@@ -112,7 +111,6 @@ open class CRPlotView: UIView {
     
     open var points = [CGPoint]() {
         didSet {
-          
             points = points.sorted{ $0.x < $1.x }
             if approximateMode {
                 points = approximateBezierCurve(points, accuracy: approximateAccuracy)
@@ -209,7 +207,7 @@ open class CRPlotView: UIView {
     }()
     
     fileprivate var lengthPerYPoint: CGFloat {
-        return correctedBounds.height / totalRelativeHeight
+        return (correctedBounds.height / totalRelativeHeight) - (markTrackingCurveOffset / (correctedBounds.height / totalRelativeHeight))
     }
     
     fileprivate var lengthPerXPoint: CGFloat {
@@ -768,7 +766,7 @@ private extension CRPlotView {
         
         // converting to real coordinates on the view
         var correctedPoints: [CGPoint] = points.map {
-            var point = CGPoint(x: $0.x, y: $0.y)
+            var point = CGPoint(x: $0.x, y: $0.y - markTrackingCurveOffset / deltaY)
             
             if !isVerticalAxisInversed {
                 point.y = 10 - point.y
