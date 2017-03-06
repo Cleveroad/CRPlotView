@@ -30,7 +30,7 @@ open class CRPlotView: UIView {
     let strokeLayer = CAShapeLayer()
     let strokeGradient = CAGradientLayer()
 
-    open var approximateMode = false
+    open var approximateMode = true
     open var touchPoint = CGPoint()
     open var xMaxCoordinate = Float()
     open var xMinCoordinate = Float()
@@ -158,6 +158,21 @@ open class CRPlotView: UIView {
         return layer
     }()
     
+    fileprivate let markTrackingGradientLayer: CAGradientLayer = {
+        let layer = CAGradientLayer()
+        layer.colors = [UIColor.clear.cgColor, UIColor.white.cgColor]
+        layer.locations = [0.0, 1]
+        layer.startPoint = CGPoint(x: 0, y: 0)
+        layer.endPoint = CGPoint(x: 1, y: 0)
+        return layer
+    }()
+    
+    fileprivate let markTrackingGradientMask: CAShapeLayer = {
+        let layer = CAShapeLayer()
+        layer.backgroundColor = UIColor.clear.cgColor
+        return layer
+    }()
+    
     fileprivate let markLayer: CALayer = {
         let layer = CALayer()
         layer.frame = CGRect(x: 0, y: 0, width: 10, height: 10)
@@ -171,6 +186,7 @@ open class CRPlotView: UIView {
         layer.shadowPath = UIBezierPath(ovalIn: layer.frame.insetBy(dx: -6, dy: -6)).cgPath
         return layer
     }()
+    
     
     fileprivate let yPositionTextLayer = CATextLayer()
     fileprivate let xPositionMaxLabel = UILabel()
@@ -242,6 +258,7 @@ open class CRPlotView: UIView {
         scrollView.layer.addSublayer( plotLayer )
         scrollView.layer.addSublayer( markLayer )
         scrollView.layer.addSublayer( yIndicatorLayer )
+        scrollView.layer.addSublayer(markTrackingGradientLayer)
         yIndicatorLayer.addSublayer( yPositionTextLayer )
         let glowAnimation = createGlowAnimation()
         markLayer.add(glowAnimation, forKey: "glowAnimation")
@@ -261,7 +278,7 @@ open class CRPlotView: UIView {
     
     func panGestureRecognizer(_ sender: UIPanGestureRecognizer) -> Void {
         if sender.state == UIGestureRecognizerState.began {
-            xPositionNowLabel .isHidden = true
+            xPositionNowLabel.isHidden = true
             showYIndicator()
         }
         
@@ -289,12 +306,10 @@ open class CRPlotView: UIView {
     
     func pinchGestureRecognizerAction(_ sender: UIPinchGestureRecognizer) {
         if sender.state == .began {
-            touchPoint = sender.location(in: self)
+            touchPoint = sender.location(in: scrollView)
         }
         if sender.state == .changed {
             let currentScale = scrollView.contentSize.width / correctedBounds.width
-            print(currentScale)
-            let pinchLocation = sender.location(in: self)
             let centeredPinchLocation = CGPoint(x: touchPoint.x * currentScale - correctedBounds.midX, y: 0)
             zoomPlot(with: sender.scale, at: centeredPinchLocation)
             sender.scale = 1
@@ -388,8 +403,8 @@ private extension CRPlotView {
     strokeGradient.colors = [color1 as AnyObject, color2 as AnyObject]
     strokeGradient.startPoint = CGPoint(x: (currentPoint.x/layer.frame.width), y: 0.0)
     strokeGradient.endPoint = CGPoint(x: (currentPoint.x/layer.frame.width)-0.6, y: 0.0)
-    strokeGradient.frame = bounds
-    plotLayer.addSublayer(strokeGradient)
+    strokeGradient.frame = correctedBounds
+    scrollView.layer.insertSublayer(strokeGradient, at: 0)
   }
     
   func culculatePointsfromCoordinate(coordinate :CGFloat) {
@@ -398,16 +413,8 @@ private extension CRPlotView {
 
         var ind = Int()
         ind = self.points.index(of: xCor)!
-              //var strokePointsArray = [CGPoint]()
-              
-            //i = 0
-             
-               //  strokePointsArray[i] = points[ind]
-                strokePointsArray .insert(xCor, at: Int(self.i))
-               i += 1
-            // strokePointsArray .append(xCor)
-             //strokePointsArray .append(contentsOf: [points[ind]])
-              
+              strokePointsArray.insert(xCor, at: Int(self.i))
+              i += 1
       }
     }
   }
@@ -510,12 +517,11 @@ private extension CRPlotView {
     }
     
     func updatePlotWithFocus() {
-        scrollView.contentOffset = CGPoint(x: focusPoint.x, y: 0)
+        scrollView.setContentOffset(CGPoint(x: focusPoint.x, y: 0), animated: false)
         updatePlot()
     }
     
     func updatePlot() {
-      
         let size = CGSize(width: lengthPerXPoint * totalRelativeLength, height: correctedBounds.height)
         let totalBounds = CGRect(origin: correctedBounds.origin,
                                  size: size)
@@ -618,10 +624,12 @@ private extension CRPlotView {
         let colors = [topColor.cgColor, topColor.darkColor().cgColor]
         let strokeProgress = newLength / totalLength
 
-        var pathNew = createStrokePlotPath(points).cgPath
+        var pathNew = offsetCurvePath(with: points, offset: 2).cgPath
         strokeLayer.path = pathNew
         strokeGradient.mask = strokeLayer
-        currectPointStroke = currentPoint
+        strokeGradient.startPoint = CGPoint(x: (currentPoint.x/layer.frame.width), y: 0.0)
+        strokeGradient.endPoint = CGPoint(x: (currentPoint.x/layer.frame.width)-0.6, y: 0.0)
+      
         // correction according to top shift
         correctedPoint.y += correctedBounds.origin.y
         CATransaction.begin()
@@ -633,7 +641,7 @@ private extension CRPlotView {
         
         markLayer.position = correctedPoint
         yIndicatorLayer.position = CGPoint(x: UIScreen.main.bounds.width / 2, y: correctedPoint.y)
-        yPositionTextLayer.frame = CGRect(x: 0, y:-yPositionTextLayer.frame.height/2, width: 50, height: 50)
+        yPositionTextLayer.frame = CGRect(x: 0, y:-yPositionTextLayer.frame.height / 2, width: 50, height: 50)
         yPositionTextLayer.fontSize = 20
         yPositionTextLayer.foregroundColor = UIColor.white.cgColor
       
@@ -663,6 +671,36 @@ private extension CRPlotView {
         
         let path = createLinearPlotPath( corrPoints )
         return path
+    }
+  
+    func offsetCurvePath(with originPoints: [CGPoint], offset: CGFloat) -> UIBezierPath {
+      var offsetPoints = [CGPoint]()
+      for pointIndex in 0..<originPoints.count - 1 {
+            let firstPoint = originPoints[pointIndex]
+            let secondPoint = originPoints[pointIndex + 1]
+            
+            let deltaX = secondPoint.x - firstPoint.x
+            let deltaY = secondPoint.y - firstPoint.y
+            
+            let angleTng = deltaY / deltaX
+            let angle = atan(angleTng)
+            let offsetRotationAngle = angle + 90
+            
+            let offsetPointX = firstPoint.x - offset * cos(offsetRotationAngle)
+            let offsetPointY = firstPoint.y - offset * sin(offsetRotationAngle)
+            
+            let offsetPoint = CGPoint(x: offsetPointX, y: offsetPointY)
+            
+            offsetPoints.append(offsetPoint)
+      }
+        
+      let reversedOrignPoints = originPoints.reversed()
+      offsetPoints.append(contentsOf: reversedOrignPoints)
+      offsetPoints = offsetPoints.filter({$0.x <= currentPoint.x})
+        
+      let offsetPath = createLinearPlotPath(offsetPoints)
+        
+      return offsetPath
     }
     
     func createGlowAnimation() -> CAAnimation {
