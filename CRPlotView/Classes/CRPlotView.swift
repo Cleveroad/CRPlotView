@@ -295,11 +295,10 @@ open class CRPlotView: UIView {
             }
         }
 
-      
         if sender.state == UIGestureRecognizerState.ended {
             markXPos = newMarkXPos
             self.reloadValuesOnXYAxis()
-      }
+        }
     }
     
     func pinchGestureRecognizerAction(_ sender: UIPinchGestureRecognizer) {
@@ -367,7 +366,7 @@ private extension CRPlotView {
         var labels: [UILabel] = [xPositionMaxLabel, xPositionMinLabel, xPositionNowLabel]
             for label in labels {
             label.textColor = UIColor.white.withAlphaComponent(0.5)
-            label.textAlignment = NSTextAlignment .center
+            label.textAlignment = NSTextAlignment.center
             label.font = UIFont.systemFont(ofSize: 12)
             label.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -400,7 +399,7 @@ private extension CRPlotView {
     let color2 = UIColor.clear.cgColor
     strokeGradient.colors = [color1 as AnyObject, color2 as AnyObject]
     strokeGradient.startPoint = CGPoint(x: (currentPoint.x/layer.frame.width), y: 0.0)
-    strokeGradient.endPoint = CGPoint(x: (currentPoint.x/layer.frame.width)-0.6, y: 0.0)
+    strokeGradient.endPoint = CGPoint(x: (currentPoint.x/layer.frame.width)-0.5, y: 0.0)
     strokeGradient.frame = correctedBounds
     scrollView.layer.insertSublayer(strokeGradient, at: 0)
   }
@@ -468,7 +467,7 @@ private extension CRPlotView {
     func setMarkPositionX(xPosition: CGFloat ) {
         UIView.animate(withDuration: 0.5) {
             self.markLayer.frame = CGRect(x: 0, y:0, width: 10, height: 10)
-             self.plotLayer.strokeEnd = xPosition
+            self.plotLayer.strokeEnd = xPosition
             self.markRelativePos = xPosition
           
           let animation = CAKeyframeAnimation()
@@ -622,12 +621,12 @@ private extension CRPlotView {
         let colors = [topColor.cgColor, topColor.darkColor().cgColor]
         let strokeProgress = newLength / totalLength
 
-        var pathNew = offsetCurvePath(with: points, offset: 2).cgPath
+        var pathNew = offsetCurvePath(with: newPoints, offset: markTrackingCurveOffset).cgPath
         strokeLayer.path = pathNew
         strokeGradient.mask = strokeLayer
         strokeGradient.startPoint = CGPoint(x: (currentPoint.x/layer.frame.width), y: 0.0)
         strokeGradient.endPoint = CGPoint(x: (currentPoint.x/layer.frame.width)-0.6, y: 0.0)
-      
+        
         // correction according to top shift
         correctedPoint.y += correctedBounds.origin.y
         CATransaction.begin()
@@ -694,7 +693,7 @@ private extension CRPlotView {
         
       let reversedOrignPoints = originPoints.reversed()
       offsetPoints.append(contentsOf: reversedOrignPoints)
-      offsetPoints = offsetPoints.filter({$0.x <= currentPoint.x})
+      offsetPoints = offsetPoints.filter({$0.x <= currentPoint.x + markTrackingCurveOffset})
         
       let offsetPath = createLinearPlotPath(offsetPoints)
         
