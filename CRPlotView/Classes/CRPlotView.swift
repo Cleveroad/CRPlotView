@@ -287,9 +287,6 @@ open class CRPlotView: UIView {
             currectPointStroke = currentPoint
             for xCor in self.result{
               if (Int(markRelativePos) == Int(xCor.x)) {
-                //xPositionNowLabel.isHidden = false
-                // xPositionNowLabel.text = ("\(Int(xCor.x))")
-                //print(xCor.y)
                 yPositionTextLayer.string = String(describing: xCor.y)
               }
             }
