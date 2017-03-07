@@ -94,7 +94,7 @@ class ViewController: UIViewController,CRPlotViewDelegate {
         points.append( CGPoint(x: 3, y: 2))
         points.append( CGPoint(x: 5, y: 5))
         points.append( CGPoint(x: 12, y: 8))
-        points.append( CGPoint(x: 15, y: 10))
+        points.append( CGPoint(x: 15, y: 9))
         points.append( CGPoint(x: 18, y: 2))
         points.append( CGPoint(x: 20, y: 0))
         points.append( CGPoint(x: 24, y: 2))
@@ -163,28 +163,7 @@ extension ViewController {
     }
     
     @IBAction func waveHighDidChange(_ sender: UISlider) {
-
-        let newPoint = CGPoint(x: plotView.markRelativePos, y: CGFloat(sender.value))
-        
-        var foundedIndex = -1
-        for (index,point) in points.enumerated() {
-            if (newPoint.x - 1)...(newPoint.x + 1) ~= point.x {
-                foundedIndex = index
-                break
-            }
-        }
-        
-        if foundedIndex == -1 {
-            points.append( newPoint )
-        } else {
-            let correctedPoint = CGPoint(x: points[foundedIndex].x, y: newPoint.y)
-            points[foundedIndex] = correctedPoint
-        }
-        
-        CATransaction.begin()
-        CATransaction.setDisableActions( true )
-        plotView.points = points
-        CATransaction.commit()
+        plotView.updateCurrentPoint(with: sender.value)
     }
     
     @IBAction func pinchTapped(_ sender: UIPinchGestureRecognizer) {

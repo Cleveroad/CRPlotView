@@ -32,7 +32,6 @@ open class CRPlotView: UIView {
     open var xMinCoordinate = Float()
     open var i = Int()
     open var strokePointsArray = [CGPoint]()
-    open var result = [CGPoint]()
     open var constraintForXPosition = NSLayoutConstraint()
     /// points count of points that will be created between two relative points
     open var approximateAccuracy = 30
@@ -135,6 +134,8 @@ open class CRPlotView: UIView {
             updatePlot()
         }
     }
+    
+    open var originalPoints = [CGPoint]()
     
     //MARK: - Layers
     var pointLayers = [CALayer]()
@@ -318,7 +319,7 @@ open class CRPlotView: UIView {
 
 //MARK: - API
 public extension CRPlotView {
-    open func zoomPlot(with scale: CGFloat, at point: CGPoint) {
+    func zoomPlot(with scale: CGFloat, at point: CGPoint) {
         let length = visibleLength * 1 / scale
         let relativeLength = max(min(length, self.totalRelativeLength), self.totalRelativeLength / self.maxZoomScale!)
         focusPoint = point
@@ -328,7 +329,7 @@ public extension CRPlotView {
         CATransaction.commit()
     }
     
-    open func reloadData() {
+    func reloadData() {
         guard let delegate = delegate else {
             return
         }
@@ -340,8 +341,32 @@ public extension CRPlotView {
         }
         xPositionMinLabel.text = ("\(result.first!.x)")
         xPositionMaxLabel.text = ("\(result.last!.x)")
-        self.points = result
-        self.result = result
+        points = result
+        originalPoints = result
+    }
+    
+    func updateCurrentPoint(with value: Float) {
+        let newPoint = CGPoint(x: markRelativePos, y: CGFloat(value))
+    
+        var foundedIndex = -1
+        for (index,point) in originalPoints.enumerated() {
+            if (newPoint.x - 1)...(newPoint.x + 1) ~= point.x {
+                foundedIndex = index
+                break
+            }
+        }
+        
+        if foundedIndex == -1 {
+            originalPoints.append( newPoint )
+        } else {
+            let correctedPoint = CGPoint(x: originalPoints[foundedIndex].x, y: newPoint.y)
+            originalPoints[foundedIndex] = correctedPoint
+        }
+        
+        CATransaction.begin()
+        CATransaction.setDisableActions( true )
+        points = originalPoints
+        CATransaction.commit()
     }
 }
 
@@ -472,7 +497,7 @@ private extension CRPlotView {
 //    }
     
     @objc func respondToLeftSwipeGesture() {
-        for xCor in self.result{
+        for xCor in self.originalPoints{
             if (Int(markRelativePos) < Int(xCor.x)) {
               culculatePointsfromCoordinate(coordinate: CGFloat(xCor.x))
                 self.setMarkPositionX(xPosition: xCor.x)
@@ -485,14 +510,14 @@ private extension CRPlotView {
     
     @objc func respondToRightSwipeGesture() {
       
-        for xCor in self.result{
+        for xCor in self.originalPoints{
             if (Int(markRelativePos) <= Int(xCor.x)) {
                 var ind = Int()
-                 ind = self.result.index(of: xCor)!
+                 ind = self.originalPoints.index(of: xCor)!
                 if ind == 0 {
-                    self.setMarkPositionX(xPosition: self.result[ind].x)
+                    self.setMarkPositionX(xPosition: self.originalPoints[ind].x)
                 } else {
-                   self.setMarkPositionX(xPosition: self.result[ind-1].x)
+                   self.setMarkPositionX(xPosition: self.originalPoints[ind-1].x)
                 }
                 self.reloadValuesOnXYAxis()
                 break
@@ -527,7 +552,7 @@ private extension CRPlotView {
                 yPositionLabel.text = String(describing: Int(xCor.y))
             }
         }
-        for xCor in self.result{
+        for xCor in self.originalPoints {
             if (Int(markRelativePos) == Int(xCor.x)) {
                 xPositionNowLabel.isHidden = false
                 xPositionNowLabel.text = ("\(Int(xCor.x))")
