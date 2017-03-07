@@ -88,6 +88,10 @@ open class CRPlotView: UIView {
         }
     }
     
+    var markYPos: Int {
+        return Int(points.filter({Int($0.x) == Int(currentPoint.x / lengthPerXPoint)}).first?.y ?? 0)
+    }
+    
     open var markRelativePos: CGFloat = 0 {
         didSet {
             moveMark(markXPos)
@@ -230,9 +234,8 @@ open class CRPlotView: UIView {
         return gradient
     }()
     
-    fileprivate let yIndicatorLayer: CALayer = {
+    fileprivate let yIndicatorLineLayer: CALayer = {
         let lineLayer = CALayer()
-        lineLayer.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 1)
         lineLayer.backgroundColor = UIColor.white.cgColor
         lineLayer.opacity = 0.5
         lineLayer.isHidden = false
@@ -243,7 +246,21 @@ open class CRPlotView: UIView {
     fileprivate var focusPoint: CGPoint = CGPoint.zero
     
     //MARK: - Indication
-    fileprivate let yPositionTextLayer = CATextLayer()
+    fileprivate let yPositionLabel: UILabel = {
+        let positionLabel = UILabel(frame: CGRect(x: 0, y:0, width: 30, height: 30))
+        positionLabel.textAlignment = .center
+        positionLabel.textColor = UIColor.white
+        
+        return positionLabel
+    }()
+    
+    fileprivate let yIndicatorView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.clear
+        
+        return view
+    }()
+    
     fileprivate let xPositionMaxLabel = UILabel()
     fileprivate let xPositionMinLabel = UILabel()
     fileprivate let xPositionNowLabel = UILabel()
@@ -261,6 +278,7 @@ open class CRPlotView: UIView {
     open override func layoutSubviews() {
         super.layoutSubviews()
         updatePlot()
+        updateYIndicationView()
         scrollView.setContentOffset(CGPoint(x: startRelativeX * lengthPerXPoint, y: 0), animated: false)
     }
     
@@ -276,16 +294,12 @@ open class CRPlotView: UIView {
       
         if sender.state == UIGestureRecognizerState.changed {
             currectPointStroke = currentPoint
-            for xCor in self.result{
-              if (Int(markRelativePos) == Int(xCor.x)) {
-                yPositionTextLayer.string = String(describing: xCor.y)
-              }
-            }
+            updateYIndicationView()
         }
 
         if sender.state == UIGestureRecognizerState.ended {
             markXPos = newMarkXPos
-            self.reloadValuesOnXYAxis()
+            reloadValuesOnXYAxis()
         }
     }
     
@@ -341,13 +355,26 @@ private extension CRPlotView {
         scrollView.layer.addSublayer(backgroundGradient)
         scrollView.layer.addSublayer(plotLayer)
         scrollView.layer.addSublayer(markLayer)
-        scrollView.layer.addSublayer(yIndicatorLayer)
-        yIndicatorLayer.addSublayer(yPositionTextLayer)
         let glowAnimation = createGlowAnimation()
         markLayer.add(glowAnimation, forKey: "glowAnimation")
-        
         vertexGradient.backgroundColor = UIColor.clear.cgColor
-        backgroundGradient.addSublayer( vertexGradient )
+        backgroundGradient.addSublayer(vertexGradient)
+        setupYInicationView()
+    }
+    
+    func setupYInicationView() {
+        addSubview(yIndicatorView)
+        updateYIndicationView()
+        yIndicatorView.addSubview(yPositionLabel)
+        yIndicatorView.layer.addSublayer(yIndicatorLineLayer)
+    }
+    
+    func updateYIndicationView() {
+        let yPositionString = "\(markYPos)"
+        yIndicatorView.frame = CGRect(x: 0, y: 0, width: correctedBounds.width, height: yPositionLabel.bounds.width)
+        yIndicatorLineLayer.frame = CGRect(x: yPositionLabel.bounds.width, y: yIndicatorView.bounds.midY, width: correctedBounds.width - yPositionLabel.bounds.width, height: 1)
+        yPositionLabel.text = yPositionString
+        yIndicatorView.center = CGPoint(x: correctedBounds.width / 2, y: currentPoint.y)
     }
     
     func setupGestureRecognizers() {
@@ -497,14 +524,14 @@ private extension CRPlotView {
               
                 xPositionNowLabel.isHidden = false
                 xPositionNowLabel.text = ("\(Int(xCor.x))")
-                yPositionTextLayer.string = String(describing: Int(xCor.y))
+                yPositionLabel.text = String(describing: Int(xCor.y))
             }
         }
         for xCor in self.result{
             if (Int(markRelativePos) == Int(xCor.x)) {
                 xPositionNowLabel.isHidden = false
                 xPositionNowLabel.text = ("\(Int(xCor.x))")
-                yPositionTextLayer.string = String(describing: Int(xCor.y))
+                yPositionLabel.text = String(describing: Int(xCor.y))
                 print("extrem")
             }
         }
@@ -630,14 +657,9 @@ private extension CRPlotView {
         backgroundGradient.gradColors = colors
         backgroundGradient.setNeedsDisplay()
         plotLayer.strokeEnd = strokeProgress
-        
         markLayer.position = correctedPoint
         updateOffsetCurve(for: newPoints)
-        yIndicatorLayer.position = CGPoint(x: UIScreen.main.bounds.width / 2, y: correctedPoint.y)
-        yPositionTextLayer.frame = CGRect(x: 0, y:-yPositionTextLayer.frame.height / 2, width: 50, height: 50)
-        yPositionTextLayer.fontSize = 20
-        yPositionTextLayer.foregroundColor = UIColor.white.cgColor
-      
+        updateYIndicationView()
         CATransaction.commit()
     }
     
@@ -653,13 +675,13 @@ private extension CRPlotView {
     
     func showYIndicator() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.yIndicatorLayer.isHidden = false
+            self.yPositionLabel.isHidden = false
         }
     }
     
     func hideYIndicator() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.yIndicatorLayer.isHidden = true
+            self.yPositionLabel.isHidden = true
         }
         
     }
@@ -773,7 +795,7 @@ private extension CRPlotView {
             var point = CGPoint(x: $0.x, y: $0.y - markTrackingCurveOffset / deltaY)
             
             if !isVerticalAxisInversed {
-                point.y = 10 - point.y
+                point.y = totalRelativeHeight - point.y
             }
             
             point.x *= deltaX
