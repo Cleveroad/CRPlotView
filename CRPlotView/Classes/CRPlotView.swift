@@ -221,15 +221,42 @@ open class CRPlotView: UIView {
                       height: bounds.height - edgeInsets.top - edgeInsets.bottom)
     }
     
+    fileprivate let vertexGradient: RadialGradientLayer = {
+        let colors = [UIColor.white.withAlphaComponent(0.6).cgColor,
+                      UIColor.white.withAlphaComponent(0).cgColor]
+        let gradient = RadialGradientLayer(colors: colors)
+        gradient.gradColors = colors
+        
+        return gradient
+    }()
+    
+    fileprivate let backgroundGradient: RadialGradientLayer = {
+        let gradient = RadialGradientLayer()
+        gradient.gradLocations = [0.0, 1.0]
+        return gradient
+    }()
+    
+    fileprivate let yIndicatorLayer: CALayer = {
+        let lineLayer = CALayer()
+        lineLayer.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 1)
+        lineLayer.backgroundColor = UIColor.white.cgColor
+        lineLayer.opacity = 0.5
+        lineLayer.isHidden = false
+        
+        return lineLayer
+    }()
+    
     fileprivate var focusPoint: CGPoint = CGPoint.zero
     
     open func reloadData() {
-        delegate?.numberOfPointsInPlotView(in: self)
+        guard let delegate = delegate else {
+            return
+        }
+        
         var result = [CGPoint]()
-        var count = Int((delegate?.numberOfPointsInPlotView(in: self))!)
-        var i = UInt()
-        for i in 0..<Int(count) {
-            result.append((delegate?.plotView(self, pointAtIndex: UInt(i)))!)
+        var count = Int(delegate.numberOfPointsInPlotView(in: self))
+        for index in 0..<Int(count) {
+            result.append(delegate.plotView(self, pointAtIndex: UInt(index)))
         }
         xPositionMinLabel.text = ("\(result.first!.x)")
         xPositionMaxLabel.text = ("\(result.last!.x)")
@@ -237,31 +264,15 @@ open class CRPlotView: UIView {
         self.result = result
     }
   
-    //MARK: - UIView
+    //MARK: - Life Cycle
     override open func awakeFromNib() {
         super.awakeFromNib()
-        layer.backgroundColor = UIColor.clear.cgColor
-        
-        layer.mask = maskLayer
-        backgroundGradient.mask = maskLayer
-        
+        setupPlotLayers()
+        setupGestureRecognizers()
         updatePlot()
-      
-        addSubview( scrollView )
-        scrollView.layer.addSublayer( backgroundGradient )
-        scrollView.layer.addSublayer( plotLayer )
-        scrollView.layer.addSublayer( markLayer )
-        scrollView.layer.addSublayer( yIndicatorLayer )
-        yIndicatorLayer.addSublayer( yPositionTextLayer )
-        let glowAnimation = createGlowAnimation()
-        markLayer.add(glowAnimation, forKey: "glowAnimation")
         
-        vertexGradient.backgroundColor = UIColor.clear.cgColor
-        backgroundGradient.addSublayer( vertexGradient )
-        let zoomPinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(pinchGestureRecognizerAction(_:)))
-        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognizer))
-        self.addGestureRecognizer(panGesture)
-        self.addGestureRecognizer(zoomPinchGesture)
+        addSubview( scrollView )
+
         self.addSubview(xPositionMaxLabel)
         self.addSubview(xPositionMinLabel)
         self.addSubview(xPositionNowLabel)
@@ -269,7 +280,39 @@ open class CRPlotView: UIView {
         self.addLabels()
     }
     
-    func panGestureRecognizer(_ sender: UIPanGestureRecognizer) -> Void {
+    open override func layoutSubviews() {
+        super.layoutSubviews()
+        updatePlot()
+        addStroketoPoints(points: points)
+        scrollView.setContentOffset(CGPoint(x: startRelativeX * lengthPerXPoint, y: 0), animated: false)
+    }
+    
+    //MARK: - Setup
+    private func setupPlotLayers() {
+        layer.backgroundColor = UIColor.clear.cgColor
+        layer.mask = maskLayer
+        backgroundGradient.mask = maskLayer
+        scrollView.layer.addSublayer(backgroundGradient)
+        scrollView.layer.addSublayer(plotLayer)
+        scrollView.layer.addSublayer(markLayer)
+        scrollView.layer.addSublayer(yIndicatorLayer)
+        yIndicatorLayer.addSublayer(yPositionTextLayer)
+        let glowAnimation = createGlowAnimation()
+        markLayer.add(glowAnimation, forKey: "glowAnimation")
+        
+        vertexGradient.backgroundColor = UIColor.clear.cgColor
+        backgroundGradient.addSublayer( vertexGradient )
+    }
+    
+    private func setupGestureRecognizers() {
+        let zoomPinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(pinchGestureRecognizerAction(_:)))
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognizerAction(_:)))
+        addGestureRecognizer(panGesture)
+        addGestureRecognizer(zoomPinchGesture)
+    }
+    
+    //MARK: - Actions
+    func panGestureRecognizerAction(_ sender: UIPanGestureRecognizer) -> Void {
         if sender.state == UIGestureRecognizerState.began {
             xPositionNowLabel.isHidden = true
             showYIndicator()
@@ -303,41 +346,6 @@ open class CRPlotView: UIView {
             zoomPlot(with: sender.scale, at: centeredPinchLocation)
             sender.scale = 1
         }
-    }
-    
-    let vertexGradient: RadialGradientLayer = {
-        let colors = [UIColor.white.withAlphaComponent(0.6).cgColor,
-                      UIColor.white.withAlphaComponent(0).cgColor]
-        let gradient = RadialGradientLayer(colors: colors)
-        gradient.gradColors = colors
-        
-        return gradient
-    }()
-    
-    let backgroundGradient: RadialGradientLayer = {
-        let gradient = RadialGradientLayer()
-        gradient.gradLocations = [0.0, 1.0]
-        return gradient
-    }()
-    
-    let yIndicatorLayer: CALayer = {
-        
-        let lineLayer = CALayer()
-        lineLayer.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 1)
-        lineLayer.backgroundColor = UIColor.white.cgColor
-        lineLayer.opacity = 0.5
-        lineLayer.isHidden = false
-        
-        return lineLayer
-        
-    }()
-    
-    
-    open override func layoutSubviews() {
-        super.layoutSubviews()
-        updatePlot()
-        addStroketoPoints(points: points)
-        scrollView.setContentOffset(CGPoint(x: startRelativeX * lengthPerXPoint, y: 0), animated: false)
     }
     
     open func zoomPlot(with scale: CGFloat, at point: CGPoint) {
