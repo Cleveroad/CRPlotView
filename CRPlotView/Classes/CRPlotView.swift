@@ -456,18 +456,13 @@ private extension CRPlotView {
             self.plotLayer.strokeEnd = xPosition
             self.markRelativePos = xPosition
           
-          let animation = CAKeyframeAnimation()
+            let animation = CAKeyframeAnimation()
           
-          animation.keyPath = "position"
-          animation.repeatCount = 0
-          animation.duration = 3.0
-          //animation.calculationMode = kCAAnimationLinear
-          animation.path = self.plotLayer.path
-          // animation.values = [CGPoint(x: 10, y: 10), CGPoint(x: 150, y: 32), CGPoint(x: 270, y: 0)]
-          animation.values = self.strokePointsArray
-          //animation.keyTimes = [0, 0.5, 1]
-         // self.markLayer.add(animation, forKey: nil)
-         // print(self.currentPoint.x / self.lengthPerXPoint)
+            animation.keyPath = "position"
+            animation.repeatCount = 0
+            animation.duration = 3.0
+            animation.path = self.plotLayer.path
+            animation.values = self.strokePointsArray
         }
     }
     
