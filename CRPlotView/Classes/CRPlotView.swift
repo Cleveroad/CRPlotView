@@ -13,8 +13,7 @@ import UIKit
 public protocol CRPlotViewDelegate{
     func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt
     func plotView(_ plotView: CRPlotView, pointAtIndex index: UInt) -> CGPoint
-    func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Float) -> String?
-    func plotView (plotView: CRPlotView, titleForHorizontalAxisValue value: Float) -> String?
+    func plotView(_ plotView: CRPlotView, didMoveMark point: CGPoint)
 }
 
 
@@ -44,9 +43,6 @@ open class CRPlotView: UIView {
     
     /// total relative height for plot scene
     open var totalRelativeHeight: CGFloat = 1
-    
-    //TODO: add doc and usage for the vertical axis
-    open var isVerticalAxisInversed = false
     
     /// visible relative length that will be showed in view
     open var visibleLength:CGFloat = 1 {
@@ -88,11 +84,12 @@ open class CRPlotView: UIView {
     }
     
     var markYPos: Int {
-        return Int(points.filter({Int($0.x) == Int(currentPoint.x / lengthPerXPoint)}).first?.y ?? 0)
+        return Int(round(totalRelativeHeight - (currentPoint.y - edgeInsets.top) / lengthPerYPoint + offsetCurveRelativeHeight))
     }
     
     open var markRelativePos: CGFloat = 0 {
         didSet {
+            showXValueLabel()
             moveMark(markXPos)
         }
     }
@@ -206,7 +203,11 @@ open class CRPlotView: UIView {
     }()
     
     fileprivate var lengthPerYPoint: CGFloat {
-        return (correctedBounds.height / totalRelativeHeight) - (markTrackingCurveOffset / (correctedBounds.height / totalRelativeHeight))
+        return correctedBounds.height / totalRelativeHeight - offsetCurveRelativeHeight
+    }
+    
+    fileprivate var offsetCurveRelativeHeight: CGFloat {
+        return markTrackingCurveOffset / (correctedBounds.height / totalRelativeHeight)
     }
     
     fileprivate var lengthPerXPoint: CGFloat {
@@ -299,6 +300,7 @@ open class CRPlotView: UIView {
         
         if sender.state == UIGestureRecognizerState.changed {
             currectPointStroke = currentPoint
+            delegate?.plotView(self, didMoveMark: CGPoint(x: newMarkXPos / lengthPerXPoint, y: CGFloat(markYPos)))
             updateYIndicationView()
         }
 
@@ -611,7 +613,6 @@ private extension CRPlotView {
             let multiplierY = (xValue - lastPoint.x) / (nextPoint.x - lastPoint.x)
             
             correctedPoint = pointBetween(lastPoint, p2: nextPoint, progress: multiplierY)
-            
         }
         
         newPoints.append(correctedPoint)
@@ -754,11 +755,7 @@ private extension CRPlotView {
         // converting to real coordinates on the view
         var correctedPoints: [CGPoint] = points.map {
             var point = CGPoint(x: $0.x, y: $0.y - markTrackingCurveOffset / deltaY)
-            
-            if !isVerticalAxisInversed {
-                point.y = totalRelativeHeight - point.y
-            }
-            
+            point.y = totalRelativeHeight - point.y
             point.x *= deltaX
             point.y *= deltaY
             return point

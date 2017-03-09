@@ -10,17 +10,20 @@ import UIKit
 import CRPlotView
 
 
-class ViewController: UIViewController,CRPlotViewDelegate {
+class ViewController: UIViewController {
 
-    var points = [CGPoint]()
+    //MARK: - IBOutlet
     @IBOutlet weak var sliderQuality: UISlider!
     @IBOutlet weak var plotView: CRPlotView!
     @IBOutlet weak var waveSlider: UISlider!
-    public var pointsArray = [CGPoint]()
     
+    //MARK: - Properties
     var timer = Timer()
     var visibleLength: CGFloat = 24
+    var points = [CGPoint]()
+    public var pointsArray = [CGPoint]()
     
+    //MARK: - Life Cycle
     override func viewDidLoad() {
         super.viewDidLoad()
        
@@ -46,48 +49,15 @@ class ViewController: UIViewController,CRPlotViewDelegate {
         waveSlider.value = waveSlider.maximumValue * Float(value)
     }
     
-    func respondToLeftSwipeGesture(gesture: UIGestureRecognizer) {
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "LeftSwipe"), object: nil)
-    }
-    func respondToRightSwipeGesture(gesture: UIGestureRecognizer) {
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "RightSwipe"), object: nil)
-    }
-    
-    func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt{
-        return UInt(pointsArray.count)
-    }
-    
-    func plotView(_ plotView: CRPlotView, pointAtIndex index: UInt) -> CGPoint{
-        return pointsArray[Int(index)]
-    }
-
-    
-    func plotView(plotView: CRPlotView, titleForHorizontalAxisValue value: Float) -> String? {
-        let array:[String] = ["One", "Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven"]
-        let znach = Int(value)
-        
-        var title = "title"
-        title = String(array[znach])
-       
-        
-        return title
-    }
-    
-    func plotView(plotView: CRPlotView, titleForVerticalAxisValue value: Float) -> String? {
-        let titleY = "title"
-        return titleY
-    }
-
-    
+    //MARK: - Helper Methods
     func update() {
         pointsArray.append(contentsOf: test())
-        //self.points = plotView.calculatedPoints([10,8,2,10,2,6,10])
         plotView.reloadData()
         self.points = test()
-       // plotView.points = self.points
-        
     }
-      func test() -> [CGPoint] {
+    
+    //MARK: Test points
+    func test() -> [CGPoint] {
         var points = [CGPoint]()
         points.append( CGPoint(x: 0, y: 5))
         points.append( CGPoint(x: 3, y: 2))
@@ -148,11 +118,26 @@ class ViewController: UIViewController,CRPlotViewDelegate {
     }
 }
 
+//MARK: - CRPlotViewDelegate
+extension ViewController: CRPlotViewDelegate {
+    public func plotView(_ plotView: CRPlotView, didMoveMark point: CGPoint) {
+        waveSlider.setValue(Float(point.y), animated: false)
+        sliderQuality.setValue(Float(point.x), animated: false)
+    }
+
+    func numberOfPointsInPlotView(in plotView: CRPlotView) -> UInt{
+        return UInt(pointsArray.count)
+    }
+    
+    func plotView(_ plotView: CRPlotView, pointAtIndex index: UInt) -> CGPoint{
+        return pointsArray[Int(index)]
+    }
+}
+
 //MARK: - Action
 extension ViewController {
-    
     @IBAction func sliderDidChangeValue(_ sender: UISlider) {
-        let position = (CGFloat(sender.value) / 10) * visibleLength
+        let position = (CGFloat(sender.value) / 24) * visibleLength
         plotView.markRelativePos = position
         let value = (plotView.frame.height - plotView.currentPoint.y) / plotView.frame.height
         waveSlider.value = waveSlider.maximumValue * Float(value)

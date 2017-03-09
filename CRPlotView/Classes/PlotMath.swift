@@ -188,9 +188,6 @@ func cubicBezierLength(_ start: CGPoint, p1:CGPoint, p2:CGPoint, end:CGPoint, ac
     return length
 }
 
-
-
-
 //MARK : - Vector logic
 func cosAngleBetweenVectors(_ a: CGVector, b: CGVector) -> CGFloat {
     let scalarProduct = scalarProductVector(a, vector2: b)
