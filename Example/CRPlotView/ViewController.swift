@@ -35,16 +35,15 @@ class ViewController: UIViewController,CRPlotViewDelegate {
         plotView.lowColor  = UIColor(red:1.00, green:0.09, blue:0.36, alpha:1.00)
         plotView.delegate = self
         update()
-        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(self.respondToRightSwipeGesture))
-        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(self.respondToLeftSwipeGesture))
-        swipeLeft.direction = .left
-        swipeRight.direction = .right
-        view.addGestureRecognizer(swipeRight)
-        view.addGestureRecognizer(swipeLeft)
+        let moveToNextPointSwipeRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(moveToNextPointAction(sender:)))
+        moveToNextPointSwipeRecognizer.direction = [.left]
+        let moveToPreviousPointSwipeRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(moveToPreviousPointAction(sender:)))
+        moveToPreviousPointSwipeRecognizer.direction = [.right]
+        view.addGestureRecognizer(moveToNextPointSwipeRecognizer)
+        view.addGestureRecognizer(moveToPreviousPointSwipeRecognizer)
         sliderQuality.value = Float((Float(sliderQuality.maximumValue) * Float(plotView.markRelativePos)) / Float(visibleLength))
         let value = (plotView.frame.height - plotView.currentPoint.y) / plotView.frame.height
         waveSlider.value = waveSlider.maximumValue * Float(value)
-      
     }
     
     func respondToLeftSwipeGesture(gesture: UIGestureRecognizer) {
@@ -149,10 +148,7 @@ class ViewController: UIViewController,CRPlotViewDelegate {
     }
 }
 
-
-
 //MARK: - Action
-
 extension ViewController {
     
     @IBAction func sliderDidChangeValue(_ sender: UISlider) {
@@ -166,23 +162,11 @@ extension ViewController {
         plotView.updateCurrentPoint(with: sender.value)
     }
     
-    @IBAction func pinchTapped(_ sender: UIPinchGestureRecognizer) {
-//        let length = visibleLength * 1 / sender.scale
-//        let relativeLength = max(min(length, plotView.totalRelativeLength), plotView.totalRelativeLength / plotView.maxZoomScale!)
-//        var locationTapped = sender.location(in: plotView)
-//        plotView.touchPoint = locationTapped
-//        switch sender.state {
-//        case .changed:
-//            CATransaction.begin()
-//            CATransaction.setDisableActions( true )
-//            plotView.visibleLength = relativeLength
-//            CATransaction.commit()
-//            break
-//            
-//        default:
-//            visibleLength = relativeLength
-//        }
-        
-//        plotView.zoomPlot(with: sender.scale, at: locationTapped)
+    func moveToNextPointAction(sender: UISwipeGestureRecognizer) {
+        plotView.moveMarkToNextPoint()
+    }
+    
+    func moveToPreviousPointAction(sender: UISwipeGestureRecognizer) {
+        plotView.moveMarkToPreviousPoint()
     }
 }

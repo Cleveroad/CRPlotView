@@ -448,7 +448,6 @@ private extension CRPlotView {
         setupMaxXLabelConstraints()
         setupMinXLabelConstraints()
         setupCurrentXLabelConstraints()
-        addLabels()
     }
     
     func setupMaxXLabelConstraints() {
@@ -488,20 +487,6 @@ private extension CRPlotView {
         yIndicatorLineLayer.frame = CGRect(x: yPositionLabel.bounds.width, y: yIndicatorView.bounds.midY, width: correctedBounds.width - yPositionLabel.bounds.width, height: 1)
         yPositionLabel.text = yPositionString
         yIndicatorView.center = CGPoint(x: correctedBounds.width / 2, y: currentPoint.y)
-    }
-    
-    func addLabels() {
-        NotificationCenter.default.addObserver(self, selector: #selector(self.respondToLeftSwipeGesture), name: NSNotification.Name(rawValue: "LeftSwipe"), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(self.respondToRightSwipeGesture), name: NSNotification.Name(rawValue: "RightSwipe"), object: nil)
-    }
-  
-    @objc func respondToLeftSwipeGesture() {
-        moveMarkToNextPoint()
-
-    }
-    
-    @objc func respondToRightSwipeGesture() {
-      moveMarkToPreviousPoint()
     }
     
     func reloadValuesOnXYAxis() {
