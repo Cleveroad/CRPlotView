@@ -135,7 +135,11 @@ open class CRPlotView: UIView {
         }
     }
     
-    open var originalPoints = [CGPoint]()
+    open var originalPoints = [CGPoint]() {
+        didSet {
+            originalPoints = originalPoints.sorted { $0.x < $1.x }
+        }
+    }
     
     //MARK: - Layers
     var pointLayers = [CALayer]()
@@ -285,11 +289,6 @@ open class CRPlotView: UIView {
     
     //MARK: - Actions
     func panGestureRecognizerAction(_ sender: UIPanGestureRecognizer) -> Void {
-        if sender.state == UIGestureRecognizerState.began {
-            xPositionNowLabel.isHidden = true
-            showYIndicator()
-        }
-        
         let newMarkXPos = sender.translation(in: self).x + markXPos
         moveMark(newMarkXPos)
       
@@ -357,16 +356,48 @@ public extension CRPlotView {
         }
         
         if foundedIndex == -1 {
-            originalPoints.append( newPoint )
+            originalPoints.append(newPoint)
         } else {
             let correctedPoint = CGPoint(x: originalPoints[foundedIndex].x, y: newPoint.y)
             originalPoints[foundedIndex] = correctedPoint
         }
         
         CATransaction.begin()
-        CATransaction.setDisableActions( true )
+        CATransaction.setDisableActions(true)
         points = originalPoints
         CATransaction.commit()
+    }
+    
+    func moveMarkToNextPoint() {
+        let pointsGreaterThenCurrent = originalPoints.filter { $0.x > markRelativePos }
+        
+        guard let nextRelativePoint = pointsGreaterThenCurrent.first else {
+            return
+        }
+        
+        let movingPoints = correctedPoints().filter { $0.x > markXPos && $0.x < nextRelativePoint.x * lengthPerXPoint }
+        
+        for movePoint in movingPoints {
+            moveMark(movePoint.x)
+        }
+        
+        markRelativePos = nextRelativePoint.x
+    }
+    
+    func moveMarkToPreviousPoint() {
+        let pointsLessThenCurrent = originalPoints.filter { $0.x < markRelativePos }
+        
+        guard let previousRelativePoint = pointsLessThenCurrent.last else {
+            return
+        }
+        
+        let movingPoints = correctedPoints().filter { $0.x < markXPos && $0.x > previousRelativePoint.x * lengthPerXPoint }.reversed()
+        
+        for movePoint in movingPoints {
+            moveMark(movePoint.x)
+        }
+        
+        markRelativePos = previousRelativePoint.x
     }
 }
 
@@ -392,14 +423,6 @@ private extension CRPlotView {
         updateYIndicationView()
         yIndicatorView.addSubview(yPositionLabel)
         yIndicatorView.layer.addSublayer(yIndicatorLineLayer)
-    }
-    
-    func updateYIndicationView() {
-        let yPositionString = "\(markYPos)"
-        yIndicatorView.frame = CGRect(x: 0, y: 0, width: correctedBounds.width, height: yPositionLabel.bounds.width)
-        yIndicatorLineLayer.frame = CGRect(x: yPositionLabel.bounds.width, y: yIndicatorView.bounds.midY, width: correctedBounds.width - yPositionLabel.bounds.width, height: 1)
-        yPositionLabel.text = yPositionString
-        yIndicatorView.center = CGPoint(x: correctedBounds.width / 2, y: currentPoint.y)
     }
     
     func setupGestureRecognizers() {
@@ -459,86 +482,26 @@ private extension CRPlotView {
 
 //MARK: - Private Methods
 private extension CRPlotView {
+    func updateYIndicationView() {
+        let yPositionString = "\(markYPos)"
+        yIndicatorView.frame = CGRect(x: 0, y: 0, width: correctedBounds.width, height: yPositionLabel.bounds.width)
+        yIndicatorLineLayer.frame = CGRect(x: yPositionLabel.bounds.width, y: yIndicatorView.bounds.midY, width: correctedBounds.width - yPositionLabel.bounds.width, height: 1)
+        yPositionLabel.text = yPositionString
+        yIndicatorView.center = CGPoint(x: correctedBounds.width / 2, y: currentPoint.y)
+    }
     
     func addLabels() {
         NotificationCenter.default.addObserver(self, selector: #selector(self.respondToLeftSwipeGesture), name: NSNotification.Name(rawValue: "LeftSwipe"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.respondToRightSwipeGesture), name: NSNotification.Name(rawValue: "RightSwipe"), object: nil)
     }
   
-  func culculatePointsfromCoordinate(coordinate :CGFloat) {
-    for xCor in self.points{
-            if ((xCor.x) <= coordinate) && ((xCor.x) >= markRelativePos)  {
-
-        var ind = Int()
-        ind = self.points.index(of: xCor)!
-              strokePointsArray.insert(xCor, at: Int(self.i))
-              i += 1
-      }
-    }
-  }
-    ///Search nearest point for given point if there no such point, creates it.
-//    func point(at point: CGPoint) -> CGPoint {
-//        let newPoint = CGPoint(x: plotView.markRelativePos, y: CGFloat(sender.value))
-//        
-//        var foundedIndex = -1
-//        for (index,point) in points.enumerated() {
-//            if (newPoint.x - 1)...(newPoint.x + 1) ~= point.x {
-//                foundedIndex = index
-//                break
-//            }
-//        }
-//        
-//        if foundedIndex == -1 {
-//            points.append( newPoint )
-//        } else {
-//            let correctedPoint = CGPoint(x: points[foundedIndex].x, y: newPoint.y)
-//            points[foundedIndex] = correctedPoint
-//        }
-//    }
-    
     @objc func respondToLeftSwipeGesture() {
-        for xCor in self.originalPoints{
-            if (Int(markRelativePos) < Int(xCor.x)) {
-              culculatePointsfromCoordinate(coordinate: CGFloat(xCor.x))
-                self.setMarkPositionX(xPosition: xCor.x)
-              
-                self.reloadValuesOnXYAxis()
-                break
-            }
-        }
+        moveMarkToNextPoint()
+
     }
     
     @objc func respondToRightSwipeGesture() {
-      
-        for xCor in self.originalPoints{
-            if (Int(markRelativePos) <= Int(xCor.x)) {
-                var ind = Int()
-                 ind = self.originalPoints.index(of: xCor)!
-                if ind == 0 {
-                    self.setMarkPositionX(xPosition: self.originalPoints[ind].x)
-                } else {
-                   self.setMarkPositionX(xPosition: self.originalPoints[ind-1].x)
-                }
-                self.reloadValuesOnXYAxis()
-                break
-            }
-      }
-  }
-    
-    func setMarkPositionX(xPosition: CGFloat ) {
-        UIView.animate(withDuration: 0.5) {
-            self.markLayer.frame = CGRect(x: 0, y:0, width: 10, height: 10)
-            self.plotLayer.strokeEnd = xPosition
-            self.markRelativePos = xPosition
-          
-            let animation = CAKeyframeAnimation()
-          
-            animation.keyPath = "position"
-            animation.repeatCount = 0
-            animation.duration = 3.0
-            animation.path = self.plotLayer.path
-            animation.values = self.strokePointsArray
-        }
+      moveMarkToPreviousPoint()
     }
     
     func reloadValuesOnXYAxis() {
@@ -557,7 +520,6 @@ private extension CRPlotView {
                 xPositionNowLabel.isHidden = false
                 xPositionNowLabel.text = ("\(Int(xCor.x))")
                 yPositionLabel.text = String(describing: Int(xCor.y))
-                print("extrem")
             }
         }
         if xPositionNowLabel.layer.frame.intersects(xPositionMinLabel.layer.frame) || xPositionNowLabel.layer.frame.intersects(xPositionMaxLabel.layer.frame) {
@@ -683,8 +645,8 @@ private extension CRPlotView {
         backgroundGradient.setNeedsDisplay()
         plotLayer.strokeEnd = strokeProgress
         markLayer.position = correctedPoint
-        updateOffsetCurve(for: newPoints)
         updateYIndicationView()
+        updateOffsetCurve(for: newPoints)
         CATransaction.commit()
     }
     
@@ -696,19 +658,6 @@ private extension CRPlotView {
         offsetCurveGradientLayer.frame = CGRect(origin: correctedBounds.origin, size: CGSize(width: currentPoint.x, height: correctedBounds.height))
         offsetCurveMaskLayer.path = offsetMaskPath
         offsetCurveGradientLayer.mask = offsetCurveMaskLayer
-    }
-    
-    func showYIndicator() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.yPositionLabel.isHidden = false
-        }
-    }
-    
-    func hideYIndicator() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.yPositionLabel.isHidden = true
-        }
-        
     }
     
     func createShadowPath() -> UIBezierPath {

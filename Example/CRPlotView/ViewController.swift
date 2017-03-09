@@ -94,7 +94,7 @@ class ViewController: UIViewController,CRPlotViewDelegate {
         points.append( CGPoint(x: 3, y: 2))
         points.append( CGPoint(x: 5, y: 5))
         points.append( CGPoint(x: 12, y: 8))
-        points.append( CGPoint(x: 15, y: 9))
+        points.append( CGPoint(x: 15, y: 10))
         points.append( CGPoint(x: 18, y: 2))
         points.append( CGPoint(x: 20, y: 0))
         points.append( CGPoint(x: 24, y: 2))
