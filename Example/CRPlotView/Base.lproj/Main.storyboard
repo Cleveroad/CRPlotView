@@ -34,6 +34,14 @@
                                 <constraints>
                                     <constraint firstAttribute="height" constant="150" id="wTz-Pp-urd"/>
                                 </constraints>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="highColor">
+                                        <color key="value" red="0.18239430549999999" green="1" blue="0.2337125458" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="color" keyPath="lowColor">
+                                        <color key="value" red="0.19215686269999999" green="0.70980392160000005" blue="0.90196078430000004" alpha="1" colorSpace="calibratedRGB"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
                                 <connections>
                                     <outletCollection property="gestureRecognizers" destination="g4N-44-AcJ" appends="YES" id="fTZ-zO-j2h"/>
                                 </connections>

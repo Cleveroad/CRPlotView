@@ -26,14 +26,13 @@ class ViewController: UIViewController {
     //MARK: - Life Cycle
     override func viewDidLoad() {
         super.viewDidLoad()
-       
+    
         plotView.totalRelativeHeight = 10
         plotView.totalRelativeLength = visibleLength
         plotView.maxZoomScale        = 10
         plotView.visibleLength       = visibleLength
         plotView.startRelativeX      = 0
         plotView.markRelativePos     = 12
-        plotView.approximateMode     = true
         plotView.highColor = UIColor(red:0.45, green:0.84, blue:0.27, alpha:1.00)
         plotView.lowColor  = UIColor(red:1.00, green:0.09, blue:0.36, alpha:1.00)
         plotView.delegate = self

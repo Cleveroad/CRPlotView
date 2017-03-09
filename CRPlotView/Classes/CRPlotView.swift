@@ -23,28 +23,32 @@ let lightBlackColor = UIColor(colorLiteralRed: 100/255, green: 100/255, blue: 10
 let isItDebug = false
 
 open class CRPlotView: UIView {
+    //MARK: - Properties
+    /// Height of offset line on top of the plot view
     let markTrackingCurveOffset: CGFloat = 2
-    /// allows to make curve bezier between points to make smooth lines
-    open var approximateMode = true
+    
+    /// Shadow offset of plot view
+    let plotShadowOffset: CGFloat = 5
+    
+    /// Allows to make curve bezier between points to make smooth lines
     open var touchPoint = CGPoint()
-    open var xMaxCoordinate = Float()
-    open var xMinCoordinate = Float()
-    open var i = Int()
-    open var strokePointsArray = [CGPoint]()
-    open var constraintForXPosition = NSLayoutConstraint()
-    /// points count of points that will be created between two relative points
+    
+    /// Points count of points that will be created between two relative points
     open var approximateAccuracy = 30
+    
+    /// Delegate of plot view provides data about points
     open var delegate: CRPlotViewDelegate?
-    /// total relative length for plot scene
+    
+    /// Total relative length for plot scene
     open var totalRelativeLength:CGFloat = 1
     
-    /// start relative offset by x axes
+    /// Start relative offset by x axes
     open var startRelativeX:CGFloat  = 0
     
-    /// total relative height for plot scene
+    /// Total relative height for plot scene
     open var totalRelativeHeight: CGFloat = 1
     
-    /// visible relative length that will be showed in view
+    /// Visible relative length that will be showed in view
     open var visibleLength:CGFloat = 1 {
         didSet {
             if visibleLength > totalRelativeLength {
@@ -54,11 +58,12 @@ open class CRPlotView: UIView {
             if let maxZoom = maxZoomScale, visibleLength < totalRelativeLength / maxZoom {
                 visibleLength = totalRelativeLength / maxZoom
             }
+            
             updatePlotWithFocus()
         }
     }
     
-    /// will hide mark
+    /// Hide mark from plot view
     open var markHidden: Bool {
         set {
             markLayer.isHidden = newValue
@@ -68,10 +73,9 @@ open class CRPlotView: UIView {
         }
     }
     
-    /// background color will apply by interpolating between high and low colors, depend on *markRelativePosition*
+    /// Background color will apply by interpolating between high and low colors, depend on *markRelativePosition*
     open var highColor: UIColor?
     open var lowColor: UIColor?
-    
     open var maxZoomScale: CGFloat?
     open var edgeInsets = UIEdgeInsetsMake(22, 0, 0, 0)
     var markXPos: CGFloat {
@@ -83,7 +87,7 @@ open class CRPlotView: UIView {
         }
     }
     
-    var markYPos: Int {
+    var markYRelativePos: Int {
         return Int(round(totalRelativeHeight - (currentPoint.y - edgeInsets.top) / lengthPerYPoint + offsetCurveRelativeHeight))
     }
     
@@ -106,9 +110,7 @@ open class CRPlotView: UIView {
     open var points = [CGPoint]() {
         didSet {
             points = points.sorted{ $0.x < $1.x }
-            if approximateMode {
-                points = approximateBezierCurve(points, accuracy: approximateAccuracy)
-            }
+            points = approximateBezierCurve(points, accuracy: approximateAccuracy)
             
             let corrPoints = correctedPoints()
             
@@ -128,6 +130,7 @@ open class CRPlotView: UIView {
                     plotLayer.addSublayer( layer )
                 }
             }
+            
             updatePlot()
         }
     }
@@ -137,6 +140,9 @@ open class CRPlotView: UIView {
             originalPoints = originalPoints.sorted { $0.x < $1.x }
         }
     }
+    
+    //MARK: - Private Properties
+    fileprivate var constraintForXPosition: NSLayoutConstraint!
     
     //MARK: - Layers
     var pointLayers = [CALayer]()
@@ -293,26 +299,28 @@ open class CRPlotView: UIView {
     func panGestureRecognizerAction(_ sender: UIPanGestureRecognizer) -> Void {
         let newMarkXPos = sender.translation(in: self).x + markXPos
         moveMark(newMarkXPos)
-      
-        if sender.state == .began {
-            hideXValueLabel()
-        }
         
-        if sender.state == UIGestureRecognizerState.changed {
+        switch sender.state {
+        case .began:
+            hideXValueLabel()
+            
+        case .changed:
             currectPointStroke = currentPoint
-            delegate?.plotView(self, didMoveMark: CGPoint(x: newMarkXPos / lengthPerXPoint, y: CGFloat(markYPos)))
+            delegate?.plotView(self, didMoveMark: CGPoint(x: newMarkXPos / lengthPerXPoint, y: CGFloat(markYRelativePos)))
             updateYIndicationView()
-        }
-
-        if sender.state == UIGestureRecognizerState.ended {
+            
+        case .ended:
             markXPos = newMarkXPos
             showXValueLabel()
+            
+        default:
+            break
         }
     }
     
     func pinchGestureRecognizerAction(_ sender: UIPinchGestureRecognizer) {
         if sender.state == .began {
-            touchPoint = sender.location(in: scrollView)
+            touchPoint = sender.location(in: self)
         }
         if sender.state == .changed {
             let currentScale = scrollView.contentSize.width / correctedBounds.width
@@ -493,7 +501,7 @@ private extension CRPlotView {
 //MARK: - Private Methods
 private extension CRPlotView {
     func updateYIndicationView() {
-        let yPositionString = "\(markYPos)"
+        let yPositionString = "\(markYRelativePos)"
         yIndicatorView.frame = CGRect(x: 0, y: 0, width: correctedBounds.width, height: yPositionLabel.bounds.width)
         yIndicatorLineLayer.frame = CGRect(x: yPositionLabel.bounds.width, y: yIndicatorView.bounds.midY, width: correctedBounds.width - yPositionLabel.bounds.width, height: 1)
         yPositionLabel.text = yPositionString
@@ -602,7 +610,6 @@ private extension CRPlotView {
         let startBoundPoint = points[1]
         let endBoundPoint   = points[points.count - 2]
         
-        
         if xValue < startBoundPoint.x {
             correctedPoint = startBoundPoint
         } else if xValue > endBoundPoint.x {
@@ -653,11 +660,12 @@ private extension CRPlotView {
     func createShadowPath() -> UIBezierPath {
         let corrPoints: [CGPoint] = correctedPoints().map { point -> CGPoint in
             var newPoint = point
-            newPoint.y += 4
+            newPoint.y += plotShadowOffset
             return newPoint
             }.reversed()
         
-        let path = createLinearPlotPath( corrPoints )
+        let path = createLinearPlotPath(corrPoints)
+        
         return path
     }
   
@@ -727,7 +735,6 @@ private extension CRPlotView {
     }
     
     func topPoint() -> CGPoint {
-        
         guard !points.isEmpty else {
             return CGPoint.zero
         }
@@ -739,12 +746,12 @@ private extension CRPlotView {
                 topPoint = point
             }
         }
+        
         return CGPoint(x: topPoint.x * lengthPerXPoint, y: topPoint.y * lengthPerYPoint)
     }
     
     // logic for total layout on scroll view
     func correctedPoints() -> [CGPoint] {
-        
         guard !points.isEmpty else {
             return points
         }
@@ -773,31 +780,5 @@ private extension CRPlotView {
         correctedPoints.insert(firstPoint, at: 0)
         correctedPoints.append(lastPoint)
         return correctedPoints
-    }
-}
-
-extension UIColor {
-    func darkColor() -> UIColor{
-        let c = self.cgColor.components
-        let r: CGFloat = max(c![0] - 0.2, 0)
-        let g: CGFloat = max(c![1] - 0.2, 0)
-        let b: CGFloat = max(c![2] - 0.2, 0)
-        let a: CGFloat = c![3]
-        return UIColor(red:r, green:g, blue:b, alpha:a)
-    }
-    
-    func interpolateToColor(_ toColor: UIColor, fraction: CGFloat) -> UIColor {
-        var f = max(0, fraction)
-        f = min(1, fraction)
-        
-        let c1 = self.cgColor.components
-        let c2 = toColor.cgColor.components
-        
-        let r = c1![0] + (c2![0] - c1![0]) * f
-        let g = c1![1] + (c2![1] - c1![1]) * f
-        let b = c1![2] + (c2![2] - c1![2]) * f
-        let a = c1![3] + (c2![3] - c1![3]) * f
-        
-        return UIColor(red:r, green:g, blue:b, alpha:a)
     }
 }
