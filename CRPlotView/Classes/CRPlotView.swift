@@ -284,6 +284,7 @@ open class CRPlotView: UIView {
         super.layoutSubviews()
         updatePlot()
         updateYIndicationView()
+        showXValueLabel()
         scrollView.setContentOffset(CGPoint(x: startRelativeX * lengthPerXPoint, y: 0), animated: false)
     }
     
@@ -292,6 +293,10 @@ open class CRPlotView: UIView {
         let newMarkXPos = sender.translation(in: self).x + markXPos
         moveMark(newMarkXPos)
       
+        if sender.state == .began {
+            hideXValueLabel()
+        }
+        
         if sender.state == UIGestureRecognizerState.changed {
             currectPointStroke = currentPoint
             updateYIndicationView()
@@ -299,7 +304,7 @@ open class CRPlotView: UIView {
 
         if sender.state == UIGestureRecognizerState.ended {
             markXPos = newMarkXPos
-            reloadValuesOnXYAxis()
+            showXValueLabel()
         }
     }
     
@@ -338,8 +343,12 @@ public extension CRPlotView {
         for index in 0..<Int(count) {
             result.append(delegate.plotView(self, pointAtIndex: UInt(index)))
         }
-        xPositionMinLabel.text = ("\(result.first!.x)")
-        xPositionMaxLabel.text = ("\(result.last!.x)")
+        
+        if let firstPoint = result.first, let lastPoint = result.last {
+            xPositionMinLabel.text = ("\(firstPoint.x)")
+            xPositionMaxLabel.text = ("\(lastPoint.x)")
+        }
+
         points = result
         originalPoints = result
     }
@@ -489,28 +498,23 @@ private extension CRPlotView {
         yIndicatorView.center = CGPoint(x: correctedBounds.width / 2, y: currentPoint.y)
     }
     
-    func reloadValuesOnXYAxis() {
-
-      currectPointStroke = currentPoint
-        for xCor in self.points{
-            if (Int(markRelativePos) == Int(xCor.x)) {
-              
-                xPositionNowLabel.isHidden = false
-                xPositionNowLabel.text = ("\(Int(xCor.x))")
-                yPositionLabel.text = String(describing: Int(xCor.y))
-            }
+    func hideXValueLabel() {
+        UIView.animate(withDuration: 0.3) {
+            self.xPositionNowLabel.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
         }
-        for xCor in self.originalPoints {
-            if (Int(markRelativePos) == Int(xCor.x)) {
-                xPositionNowLabel.isHidden = false
-                xPositionNowLabel.text = ("\(Int(xCor.x))")
-                yPositionLabel.text = String(describing: Int(xCor.y))
-            }
-        }
+    }
+    
+    func showXValueLabel() {
+        xPositionNowLabel.text = "\(Int(round(markRelativePos)))"
+        xPositionNowLabel.isHidden = false
         if xPositionNowLabel.layer.frame.intersects(xPositionMinLabel.layer.frame) || xPositionNowLabel.layer.frame.intersects(xPositionMaxLabel.layer.frame) {
             xPositionNowLabel.isHidden = true
         }
         constraintForXPosition.constant = markLayer.position.x - markLayer.frame.width*2
+        
+        UIView.animate(withDuration: 0.3) { 
+            self.xPositionNowLabel.transform = CGAffineTransform.identity
+        }
     }
     
     func updatePlotWithFocus() {
@@ -610,7 +614,7 @@ private extension CRPlotView {
             
         }
         
-        newPoints.append( correctedPoint )
+        newPoints.append(correctedPoint)
         
         let newLength = lengthLinearPath(newPoints)
         let totalLength = lengthLinearPath(points)
@@ -705,7 +709,6 @@ private extension CRPlotView {
     }
     
     func vertexPoint() -> CGPoint {
-        
         let point = topPoint()
         let gradFrame = backgroundGradient.frame
         
@@ -720,7 +723,6 @@ private extension CRPlotView {
         } else {
             return CGPoint(x: point.x - xPercentOffset, y: point.y - yPercentOffset)
         }
-        
     }
     
     func topPoint() -> CGPoint {
