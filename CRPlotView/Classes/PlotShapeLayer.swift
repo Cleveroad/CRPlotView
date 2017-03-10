@@ -26,6 +26,7 @@ class PlotShapeLayer: CAShapeLayer {
         if key == "path" {
             return true
         }
+        
         return super.needsDisplay( forKey: key )
     }
 }

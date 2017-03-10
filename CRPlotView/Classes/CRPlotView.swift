@@ -534,8 +534,7 @@ private extension CRPlotView {
     
     func updatePlot() {
         let size = CGSize(width: lengthPerXPoint * totalRelativeLength, height: correctedBounds.height)
-        let totalBounds = CGRect(origin: correctedBounds.origin,
-                                 size: size)
+        let totalBounds = CGRect(origin: correctedBounds.origin, size: size)
         
         scrollView.frame = bounds
         scrollView.contentSize = CGSize(width: lengthPerXPoint * totalRelativeLength, height: bounds.height)
